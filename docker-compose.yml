@@ -1,0 +1,18 @@
+services:
+  gateway:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      # Set this to your public domain once deployed, e.g. https://pay.yourdomain.com
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      DB_PATH: /app/data/fpg.db
+    volumes:
+      - fpg-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  fpg-data:

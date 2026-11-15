@@ -1,0 +1,19 @@
+{
+  "name": "free-payment-gateways",
+  "version": "1.0.0",
+  "description": "Self-hosted, zero-monthly-fee payment gateway. Accept bKash/Nagad (manual verification), crypto via BTCPay Server, Stripe and demo payments. Works on localhost, any cloud/VPS and as a WordPress/WooCommerce plugin.",
+  "license": "MIT",
+  "private": false,
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node test/smoke.js"
+  },
+  "engines": {
+    "node": ">=23.4.0"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
