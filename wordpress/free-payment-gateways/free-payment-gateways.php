@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       FREE Payment Gateways (Self-Hosted)
  * Plugin URI:        https://github.com/iamtanzir/FREE-Payment-Gateways
- * Description:       Connect your self-hosted FREE-Payment-Gateways server to WordPress and WooCommerce. Zero monthly fees — bKash/Nagad/Rocket/Bank + Bangla QR (manual verification), bKash Tokenized, Stripe and demo payments.
- * Version:           1.0.0
+ * Description:       Your own Bangla QR + MFS payment system for WordPress/WooCommerce — bKash, Nagad, Rocket, Upay and Bangla QR with manual TrxID verification (100% free), plus optional hosted checkout to your self-hosted gateway server.
+ * Version:           1.1.0
  * Author:            iamtanzir
  * License:           MIT
  * Text Domain:       free-payment-gateways
@@ -14,19 +14,22 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // No direct access.
 }
 
-define( 'FPG_VERSION', '1.0.0' );
+define( 'FPG_VERSION', '1.1.0' );
 define( 'FPG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-api.php';
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-return-handler.php';
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-shortcode.php';
+require_once FPG_PLUGIN_DIR . 'includes/class-fpg-admin-orders.php';
 
-// WooCommerce gateway is loaded only when WooCommerce is present.
+// WooCommerce gateways are loaded only when WooCommerce is present.
 add_action( 'plugins_loaded', function () {
     if ( class_exists( 'WooCommerce' ) ) {
         require_once FPG_PLUGIN_DIR . 'includes/class-fpg-woocommerce-gateway.php';
+        require_once FPG_PLUGIN_DIR . 'includes/class-fpg-mfs-gateway.php';
         add_filter( 'woocommerce_payment_gateways', function ( $gateways ) {
             $gateways[] = 'FPG_WooCommerce_Gateway';
+            $gateways[] = 'FPG_MFS_Gateway';
             return $gateways;
         } );
     }
@@ -72,8 +75,12 @@ function fpg_settings_page() {
         <hr>
         <h2>Shortcode for any page</h2>
         <code>[fpg_pay amount="500" description="Donation" currency="BDT" button="Donate ৳500"]</code>
-        <h2>WooCommerce</h2>
-        <p>Once saved, a payment method called <strong>FPG Self-Hosted Gateway</strong> appears under <em>WooCommerce → Settings → Payments</em>.</p>
+        <h2>WooCommerce — two gateways, both free</h2>
+        <ol>
+            <li><strong>FPG Bangla QR &amp; MFS (Manual Verify)</strong> — customers pay by scanning your Bangla QR / sending to your bKash/Nagad/Rocket/Upay number and enter their TrxID at checkout; you approve from the order screen. <em>100% free.</em></li>
+            <li><strong>FPG Self-Hosted Gateway</strong> — customers are redirected to your hosted checkout on the self-hosted gateway server.</li>
+        </ol>
+        <p>Configure the first under <em>WooCommerce → Settings → Payments → “FPG Bangla QR &amp; MFS (Manual Verify)”</em> (enable each method, set your numbers / QR image URLs). Approve pending payments from any order screen — an “FPG MFS payment — verification needed” box appears with Approve/Reject buttons.</p>
     </div>
     <?php
 }

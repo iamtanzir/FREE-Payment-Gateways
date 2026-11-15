@@ -30,8 +30,9 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 │   ├── routes/                       #   REST API · hosted checkout page · admin dashboard
 │   └── …
 ├── wordpress/
-│   ├── free-payment-gateways/        # MIT — connector plugin: WooCommerce gateway + [fpg_pay] shortcode
-│   └── bangladeshi-payment-gateways/ # GPLv2+ — vendored fork of ultraDevs' plugin (bKash/Nagad/Rocket/Upay/BanglaQR, QR checkout)
+│   └── free-payment-gateways/        # MIT — your own plugin: TWO WooCommerce gateways + [fpg_pay] shortcode
+│       ├── FPG Self-Hosted Gateway   #   customers redirect to your hosted checkout (any site can use the API)
+│       └── FPG Bangla QR & MFS       #   customers pay via Bangla QR / bKash / Nagad / Rocket / Upay at checkout, enter TrxID, you approve on the order screen
 ├── test/smoke.js                     # end-to-end smoke test (npm test)
 ├── Dockerfile · docker-compose.yml   # deploy anywhere
 └── NOTICE.md                         # licensing & credits
@@ -131,46 +132,42 @@ install Node ≥ 23.4, `npm install && npm start`, set `PORT`/`BASE_URL`.
 Use the WordPress plugin (below) — it only needs outbound HTTP from WordPress to
 your gateway URL, or point it at a gateway hosted elsewhere.
 
+## Ecosystem — everything integrates for free
+
+| Where | How | Cost |
+|---|---|---|
+| Localhost / dev machine | `npm install && npm start` — embedded SQLite, zero setup | Free |
+| Any cloud VPS / PaaS (Render, Railway, Fly.io, Hostinger, EC2…) | Docker (`docker compose up -d`) or plain Node — `BASE_URL` + HTTPS in front | Your host only |
+| Shared hosting (PHP-only) | Use the WordPress plugin (below) pointed at your gateway, or host the gateway elsewhere and only the plugin on the host | Free |
+| WordPress / WooCommerce | Two built-in gateways + `[fpg_pay]` shortcode — no external calls needed for QR mode | Free |
+| Custom apps (Node, PHP, Python, mobile…) | REST API v1 (`Authorization: Bearer`) + HMAC-signed `payment.paid` webhooks — verify with your key's webhook secret | Free |
+| Bank/MFS rails | Bangla QR, bKash/Nagad/Rocket/Upay manual verification — your own accounts | Free |
+
+Your whole payment ecosystem — site, checkout, server, webhooks — runs on this one repo with **zero third-party services and zero monthly cost**.
+
 ## WordPress / WooCommerce
 
-You have **two** options in this repo:
+One plugin, two gateways — copy `wordpress/free-payment-gateways/` to `wp-content/plugins/` and activate.
 
-### Option A — `wordpress/free-payment-gateways` (MIT, our connector)
+### Gateway 1 — FPG Bangla QR & MFS (Manual Verify) · 100% free, no server needed
 
-Lightweight connector to your **self-hosted gateway**:
+Customers pay **inside WooCommerce checkout**: they pick bKash / Nagad / Rocket / Upay / Bangla QR, scan your QR (or get your number), pay, and type their TrxID right on the checkout page. The order lands as **on-hold**; you open the order, cross-check the TrxID in your MFS app, and hit **✅ Approve & complete order**.
 
-1. Copy `wordpress/free-payment-gateways/` to `wp-content/plugins/` → activate.
-2. **Settings → FPG Gateway**: enter your gateway Base URL + API key.
-3. WooCommerce: a payment method **“FPG Self-Hosted Gateway”** appears under
-   *WooCommerce → Settings → Payments* — customers pay on your hosted checkout;
-   order is auto-marked paid on return.
-4. Any page: `[fpg_pay amount="500" description="Donation" currency="BDT" button="Donate ৳500"]`
+1. WooCommerce → Settings → Payments → **FPG Bangla QR & MFS (Manual Verify)** → enable, set your numbers / QR image URLs per method.
+2. Orders get an “📱 FPG MFS payment — verification needed” box with Approve / Reject buttons.
+3. Nothing else to install — uses your own wallets. Zero fees forever.
 
-### Option B — `wordpress/bangladeshi-payment-gateways` (GPLv2+, vendored fork)
+Setup: drop your Bangla QR image(s) anywhere public (e.g. into your site via Media Library) and paste its URL — or reuse any hosted image URL.
 
-The popular **“Bangladeshi Payment Gateways – Make Payment Using QR Code”** plugin
-by ultraDevs, included at your request: WooCommerce QR-code checkout for
-**bKash, Nagad, Rocket, Upay and Bangla QR**, with per-gateway fees, statistics,
-PDF/CSV export and checkout-block support.
+### Gateway 2 — FPG Self-Hosted Gateway · redirect to your server's hosted checkout
 
-```bash
-cd wordpress/bangladeshi-payment-gateways
-composer install --no-dev --optimize-autoloader   # restores vendored deps (mPDF)
-cd .. && cp -r bangladeshi-payment-gateways /path/to/wp-content/plugins/
-```
-
-Then in WordPress: *Plugins → activate “Bangladeshi Payment Gateways”*.
-
-- It is **GPLv2+** — this directory must remain GPL. See its `UPSTREAM-NOTICE.md`.
-- It bundles Appsero telemetry that only activates **after you opt in** via the admin notice.
-- Upstream docs/support: https://ultradevs.com/docs/bangladeshi-payment-gateways
-
-> Note: UrbdPay (urbdpay.com, self-hosted BD-MFS platform with Android SMS auto-verification)
-> could not be vendored — its public repo 404s as of Nov 2026. See `NOTICE.md`.
+1. **Settings → FPG Gateway**: enter your gateway Base URL + API key.
+2. A payment method **“FPG Self-Hosted Gateway”** appears under *WooCommerce → Settings → Payments* — customers pay on your hosted checkout; order is auto-marked paid on return.
+3. Any page: `[fpg_pay amount="500" description="Donation" currency="BDT" button="Donate ৳500"]`
 
 ## বাংলা সারাংশ
 
-এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — **Bangla QR** (নিজের ব্যাংকের QR দিয়ে, সম্পূর্ণ ফ্রি), bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য কানেক্টর প্লাগইন + ultraDevs-এর জনপ্রিয় BD MFS QR প্লাগইন (GPL, এতেও Bangla QR আছে)। localhost-এ `npm start` দিয়েই চলে; যেকোনো cloud/VPS-এ Docker দিয়ে ডিপ্লয় হয়; WordPress-এ প্লাগইন হিসেবে ব্যবহার হয়। Bangla QR setup: আপনার ব্যাংক/ব্যাংক অ্যাপ থেকে নেওয়া Bangla QR ছবি অ্যাডমিন → Settings → Bangla QR-এ URL দিন (ছবিটা `public/` ফোল্ডারে রেখে `/banglaqr.png` লিখুন) — তাহলে কাস্টমার স্ক্যান করে পে করবে আর TrxID দিলে আপনি verify করবেন।
+এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — **Bangla QR** (নিজের ব্যাংকের QR দিয়ে, সম্পূর্ণ ফ্রি), bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য নিজস্ব দুটি gateway সহ প্লাগইন — **FPG Bangla QR & MFS** (চেকআউটেই pay + TrxID, order থেকে Approve) এবং **FPG Self-Hosted Gateway** (your hosted checkout-এ redirect)। সবকিছু একদম ফ্রি integrate হয় — localhost-এ `npm start`, cloud-এ Docker, WordPress-এ প্লাগইন, custom app-এ REST API + webhook। Bangla QR setup: আপনার ব্যাংক/ব্যাংক অ্যাপ থেকে নেওয়া Bangla QR ছবি admin/WooCommerce settings-এ URL দিন — কাস্টমার স্ক্যান করে পে করবে আর TrxID দিয়ে আপনি verify করবেন।
 
 **মনে রাখবেন:** কার্ড/MFS কোম্পানির নিজের ফি সম্পূর্ণ মাফ নেই — সবসময় per-transaction fee থাকে (SSLCommerz Bangla QR-ও ফ্রি না — কম settlement fee আছে)। কিন্তু মাসিক/সেটআপ ফি শূন্য, এবং নিজের সার্ভারে ডেটা আপনার।
 
@@ -183,9 +180,7 @@ Then in WordPress: *Plugins → activate “Bangladeshi Payment Gateways”*.
 - Never commit `.env` or `data/` (both git-ignored).
 - Put the gateway behind HTTPS in production (`BASE_URL=https://…`, `TRUST_PROXY=true`).
 
-## License & credits
+## License & ownership
 
-MIT — see `LICENSE` (this repo's original code). The vendored plugin
-`wordpress/bangladeshi-payment-gateways/` is **GPLv2+**; see `NOTICE.md` and
-`wordpress/bangladeshi-payment-gateways/UPSTREAM-NOTICE.md`.
-Credits: ultraDevs · Stripe · bKash · WordPress & WooCommerce communities.
+MIT — copyright © 2026 **A.K.M. Tanzir Ahmed (iamtanzir)** and contributors to this repository. See `LICENSE` and `NOTICE.md`.
+This repository contains no third-party code: the earlier vendored plugin was removed and replaced with original, MIT-licensed code written for this project.

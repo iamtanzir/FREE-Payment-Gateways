@@ -19,9 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-──────────────────────────────────────────────────────────────────────────────
-NOTE: This MIT license applies to the original code in this repository only.
-The vendored plugin in `wordpress/bangladeshi-payment-gateways/` is licensed
-separately under GPLv2-or-later. See NOTICE.md and that folder's
-UPSTREAM-NOTICE.md.
