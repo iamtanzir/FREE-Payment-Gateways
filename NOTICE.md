@@ -20,6 +20,6 @@ This repository contains work under **two different licenses**. Please respect b
   or technically vendored. If the upstream repository becomes public, it can be
   added as a git subtree following its license (advertised as MIT).
 
-- **BTCPay Server** (https://btcpayserver.org) is recommended for zero-fee crypto payments. It is a separate GPLv3-licensed project and is **not bundled**; run it alongside (see `docs/BTCPAY.md`) and connect it as a provider.
+- **BTCPay Server** support was intentionally removed from this project on request (Nov 2026).
 
 - **WordPress Plugin `bangladeshi-payment-gateways`** contains the optional Appsero telemetry SDK, which only activates after site-admin opt-in. See the privacy note in `wordpress/bangladeshi-payment-gateways/UPSTREAM-NOTICE.md`.

@@ -1,6 +1,6 @@
 'use strict';
 // Stripe provider — free to sign up, no monthly fee, pay-per-transaction.
-// NOTE: Stripe does NOT support BDT. Use bKash/Manual/BTCPay for Bangladeshi Taka.
+// NOTE: Stripe does NOT support BDT. Use bKash/Manual for Bangladeshi Taka.
 const crypto = require('crypto');
 
 module.exports = {

@@ -5,12 +5,11 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 
 > **Honest truth about "free" first:** no gateway can move other people's money
 > (cards, bank transfers, MFS) with literally zero cost — the networks charge
-> something. What this project gives you is: **zero monthly/setup fees forever**,
-> and payment rails that are completely free to run:
+> something. What this project gives you: **zero monthly/setup fees forever**, and
+> payment rails that are genuinely free to run:
 >
 > | Rail | Cost to run | Notes |
 > |---|---|---|
-> | ₿ **BTCPay Server (crypto)** | **100% free, 0% fee** | Self-hosted, no middleman — see `docs/BTCPAY.md` |
 > | 📱 **bKash / Nagad / Rocket / Upay / Bank — manual verify** | **Free** (your own wallet) | Customer sends money → you approve in dashboard → webhook fires |
 > | 🩷 **bKash Tokenized Checkout** | Free to open, per-transaction fee | Auto-verified against bKash servers (needs merchant account) |
 > | 💳 **Stripe** | Free signup, per-transaction fee | No BDT support — use USD/EUR |
@@ -24,7 +23,7 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 
 ```
 ├── src/                              # Self-hosted gateway core (Node.js, Express, embedded SQLite)
-│   ├── providers/                    #   demo · manual MFS/bank · BTCPay · Stripe · bKash Tokenized
+│   ├── providers/                    #   demo · manual MFS/bank · Stripe · bKash Tokenized
 │   ├── routes/                       #   REST API · hosted checkout page · admin dashboard
 │   └── …
 ├── wordpress/
@@ -32,7 +31,6 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 │   └── bangladeshi-payment-gateways/ # GPLv2+ — vendored fork of ultraDevs' plugin (bKash/Nagad/Rocket/Upay/BanglaQR, QR checkout)
 ├── test/smoke.js                     # end-to-end smoke test (npm test)
 ├── Dockerfile · docker-compose.yml   # deploy anywhere
-├── docs/BTCPAY.md                    # zero-fee crypto setup
 └── NOTICE.md                         # licensing & credits
 ```
 
@@ -169,16 +167,16 @@ Then in WordPress: *Plugins → activate “Bangladeshi Payment Gateways”*.
 
 ## বাংলা সারাংশ
 
-এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), BTCPay দিয়ে **ক্রিপ্টো পেমেন্ট ০% ফি**, Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য কানেক্টর প্লাগইন + ultraDevs-এর জনপ্রিয় BD MFS QR প্লাগইন (GPL)। localhost-এ `npm start` দিয়েই চলে; যেকোনো cloud/VPS-এ Docker দিয়ে ডিপ্লয় হয়; WordPress-এ প্লাগইন হিসেবে ব্যবহার হয়।
+এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য কানেক্টর প্লাগইন + ultraDevs-এর জনপ্রিয় BD MFS QR প্লাগইন (GPL)। localhost-এ `npm start` দিয়েই চলে; যেকোনো cloud/VPS-এ Docker দিয়ে ডিপ্লয় হয়; WordPress-এ প্লাগইন হিসেবে ব্যবহার হয়।
 
-**মনে রাখবেন:** কার্ড/MFS কোম্পানির নিজের ফি সম্পূর্ণ মাফ নেই — সবসময় per-transaction fee থাকে। কিন্তু মাসিক/সেটআপ ফি শূন্য, নিজের সার্ভারে ডেটা আপনার, এবং ক্রিপ্টো হলে সত্যিই ০% ফি।
+**মনে রাখবেন:** কার্ড/MFS কোম্পানির নিজের ফি সম্পূর্ণ মাফ নেই — সবসময় per-transaction fee থাকে। কিন্তু মাসিক/সেটআপ ফি শূন্য, এবং ম্যানুয়াল MFS ভেরিফিকেশন দিয়ে একদম বিনা খরচে পেমেন্ট নেওয়া যায় — শুধু bKash/Nagad/ব্যাংক অ্যাকাউন্ট আপনার নিজের হতে হবে।
 
 ## Security
 
 - API keys are stored SHA-256-hashed; webhook secrets are per-key random values.
 - Admin password: scrypt hash; session cookie is HMAC-signed, HttpOnly.
 - Admin login is rate-limited (10 attempts / 10 min / IP).
-- Inbound BTCPay/Stripe webhooks are signature-verified; outbound webhooks are HMAC-signed.
+- Inbound Stripe webhooks are signature-verified; outbound webhooks are HMAC-signed.
 - Never commit `.env` or `data/` (both git-ignored).
 - Put the gateway behind HTTPS in production (`BASE_URL=https://…`, `TRUST_PROXY=true`).
 
@@ -187,4 +185,4 @@ Then in WordPress: *Plugins → activate “Bangladeshi Payment Gateways”*.
 MIT — see `LICENSE` (this repo's original code). The vendored plugin
 `wordpress/bangladeshi-payment-gateways/` is **GPLv2+**; see `NOTICE.md` and
 `wordpress/bangladeshi-payment-gateways/UPSTREAM-NOTICE.md`.
-Credits: ultraDevs · BTCPay Server · Stripe · bKash · WordPress & WooCommerce communities.
+Credits: ultraDevs · Stripe · bKash · WordPress & WooCommerce communities.

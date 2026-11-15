@@ -200,12 +200,10 @@ const TEXT_FIELDS = [
   ['manual_bkash_number', 'bKash number (Send Money to)'], ['manual_nagad_number', 'Nagad number'],
   ['manual_rocket_number', 'Rocket number'], ['manual_bank', 'Bank account details (free text)'],
   ['manual_note', 'Customer instructions (manual payments)'],
-  ['btcpay_url', 'BTCPay Server URL'], ['btcpay_store_id', 'BTCPay store ID'],
   ['stripe_secret_key', 'Stripe secret key (sk_live_… / sk_test_…)'],
   ['bkash_app_key', 'bKash app key'], ['bkash_username', 'bKash username'],
 ];
 const SECRET_FIELDS = [
-  ['btcpay_api_key', 'BTCPay API key'], ['btcpay_webhook_secret', 'BTCPay webhook secret'],
   ['stripe_webhook_secret', 'Stripe webhook secret (whsec_…)'],
   ['bkash_app_secret', 'bKash app secret'], ['bkash_password', 'bKash password'],
 ];
@@ -231,23 +229,17 @@ router.get('/admin/settings', requireAdmin, (req, res) => {
       </div>
 
       <div class="card" style="margin-top:16px">
-        <h2>₿ BTCPay Server — <span style="color:var(--accent)">100% free, 0% fee (crypto)</span></h2>
-        ${TEXT_FIELDS.slice(7, 9).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}" placeholder="${k === 'btcpay_url' ? 'https://btcpay.example.com' : ''}">`).join('')}
-        ${SECRET_FIELDS.slice(0, 2).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
-      </div>
-
-      <div class="card" style="margin-top:16px">
         <h2>💳 Stripe — free signup, per-transaction fee (no BDT support)</h2>
-        ${TEXT_FIELDS.slice(9, 10).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set) — leave blank to keep' : 'not set'}" autocomplete="new-password">`).join('')}
-        ${SECRET_FIELDS.slice(2, 3).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
+        ${TEXT_FIELDS.slice(7, 8).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set) — leave blank to keep' : 'not set'}" autocomplete="new-password">`).join('')}
+        ${SECRET_FIELDS.slice(0, 1).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
       </div>
 
       <div class="card" style="margin-top:16px">
         <h2>🩷 bKash Tokenized Checkout — auto-verified (merchant account needed)</h2>
         <label><input type="checkbox" name="bkash_enabled" value="1" style="width:auto;margin-right:8px" ${check(s.bkash_enabled)}> Enable bKash provider</label>
         <label><input type="checkbox" name="bkash_sandbox" value="1" style="width:auto;margin-right:8px" ${check(s.bkash_sandbox)}> Sandbox mode (uncheck for live payments)</label>
-        ${TEXT_FIELDS.slice(10).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}">`).join('')}
-        ${SECRET_FIELDS.slice(3).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
+        ${TEXT_FIELDS.slice(8).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}">`).join('')}
+        ${SECRET_FIELDS.slice(1).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
       </div>
 
       <div class="card" style="margin-top:16px">

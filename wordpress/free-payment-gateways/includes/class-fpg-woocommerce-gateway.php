@@ -19,7 +19,7 @@ add_action( 'plugins_loaded', function () {
         public function __construct() {
             $this->id                 = 'fpg_gateway';
             $this->method_title       = __( 'FPG Self-Hosted Gateway', 'free-payment-gateways' );
-            $this->method_description = __( 'Zero monthly fees. Hosted checkout on your own server — bKash/Nagad/Rocket/Bank (manual verify), BTCPay (crypto), Stripe, Demo.', 'free-payment-gateways' );
+            $this->method_description = __( 'Zero monthly fees. Hosted checkout on your own server — bKash/Nagad/Rocket/Bank (manual verify), bKash Tokenized, Stripe, Demo.', 'free-payment-gateways' );
             $this->icon               = '';
             $this->has_fields         = false;
             $this->supports           = [ 'products' ];
@@ -27,7 +27,7 @@ add_action( 'plugins_loaded', function () {
             $this->init_form_fields();
             $this->init_settings();
 
-            $this->title       = $this->get_option( 'title', __( 'Pay via bKash / Nagad / Rocket / Crypto', 'free-payment-gateways' ) );
+            $this->title       = $this->get_option( 'title', __( 'Pay via bKash / Nagad / Rocket / Bank', 'free-payment-gateways' ) );
             $this->description = $this->get_option( 'description', __( 'You will be redirected to a secure checkout page to complete your payment.', 'free-payment-gateways' ) );
             $this->enabled     = $this->get_option( 'enabled', 'no' );
 
@@ -46,7 +46,7 @@ add_action( 'plugins_loaded', function () {
                     'title'       => __( 'Title', 'free-payment-gateways' ),
                     'type'        => 'text',
                     'description' => __( 'Shown to customers at checkout.', 'free-payment-gateways' ),
-                    'default'     => __( 'Pay via bKash / Nagad / Rocket / Crypto', 'free-payment-gateways' ),
+                    'default'     => __( 'Pay via bKash / Nagad / Rocket / Bank', 'free-payment-gateways' ),
                     'desc_tip'    => true,
                 ],
                 'description' => [

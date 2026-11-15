@@ -10,10 +10,6 @@ const DEFAULTS = {
   manual_rocket_number: '',
   manual_bank: '',
   manual_note: 'Send the exact amount and put the Invoice ID as reference. Then enter your transaction ID below.',
-  btcpay_url: '',
-  btcpay_store_id: '',
-  btcpay_api_key: '',
-  btcpay_webhook_secret: '',
   stripe_secret_key: '',
   stripe_webhook_secret: '',
   bkash_enabled: '0',
@@ -54,7 +50,6 @@ function setSetting(key, value) {
 
 /** Secrets that should never be echoed back into HTML forms (sent empty, keep-if-blank semantics). */
 const SECRET_KEYS = [
-  'btcpay_api_key', 'btcpay_webhook_secret',
   'stripe_secret_key', 'stripe_webhook_secret',
   'bkash_app_secret', 'bkash_password',
 ];

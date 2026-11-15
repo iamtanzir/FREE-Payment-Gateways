@@ -49,8 +49,7 @@ function createApp() {
 
   // Inbound provider webhooks use express.raw per-route (see routes/checkout.js)
   // so raw body is available only there; JSON parsing below is safe.
-  const { btcpayWebhook, stripeWebhook } = require('./routes/checkout');
-  app.use('/', btcpayWebhook);
+  const { stripeWebhook } = require('./routes/checkout');
   app.use('/', stripeWebhook);
 
   app.use(express.json({ limit: '1mb' }));

@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS invoices (
   customer_email TEXT NOT NULL DEFAULT '',
   customer_phone TEXT NOT NULL DEFAULT '',
   status        TEXT NOT NULL DEFAULT 'pending',  -- pending | paid | failed | cancelled
-  provider      TEXT,                              -- demo | manual | btcpay | stripe | bkash
-  provider_ref  TEXT,                              -- provider-side id (btcpay invoice id, stripe session id, bkash paymentID)
+  provider      TEXT,                              -- demo | manual | stripe | bkash
+  provider_ref  TEXT,                              -- provider-side id (stripe session id, bkash paymentID)
   metadata      TEXT NOT NULL DEFAULT '{}',
   success_url   TEXT NOT NULL DEFAULT '',
   cancel_url    TEXT NOT NULL DEFAULT '',

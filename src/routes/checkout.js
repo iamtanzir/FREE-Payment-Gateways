@@ -93,7 +93,7 @@ router.get('/pay/:id', (req, res) => {
   }));
 });
 
-// ── Start a redirect-type provider (btcpay / stripe / bkash) ────────
+// ── Start a redirect-type provider (stripe / bkash) ─────────────────
 router.post('/pay/:id/provider/:providerId', async (req, res) => {
   const inv = getInvoice(req.params.id);
   if (!inv) return errorPage(res, 'Invoice not found', 404);
@@ -151,7 +151,7 @@ router.get('/pay/:id/return', (req, res) => {
   const inv = getInvoice(req.params.id);
   if (!inv) return errorPage(res, 'Invoice not found', 404);
   if (inv.status === 'paid') return successRedirect(req, res, inv);
-  // Not paid yet — show a confirming page that polls status (BTCPay confirms async).
+  // Not paid yet — show a confirming page that polls status (providers confirm async).
   res.send(layout({
     title: 'Confirming payment…', nav: false,
     body: `<div class="checkout"><div class="card" style="text-align:center">
@@ -226,24 +226,6 @@ function safeJson(s) { try { return JSON.parse(s || '{}'); } catch { return {}; 
 // ── Inbound provider webhooks (RAW body for signature verification) ──
 const rawBody = express.raw({ type: '*/*', limit: '512kb' });
 
-const btcpayWebhook = express.Router();
-btcpayWebhook.post('/webhooks/btcpay', rawBody, (req, res) => {
-  const settings = getAllSettings();
-  const provider = getProvider('btcpay');
-  const raw = req.body; // Buffer (express.raw)
-  if (!provider.verifyWebhook(raw, req.headers, settings)) {
-    return res.status(401).json({ error: 'bad signature' });
-  }
-  const event = provider.webhookEvent(raw);
-  if (event.type === 'InvoiceSettled' || event.type === 'InvoicePaymentSettled' || event.type === 'InvoiceProcessing') {
-    const row = event.invoiceId
-      ? db.prepare('SELECT * FROM invoices WHERE provider_ref = ?').get(event.invoiceId)
-      : null;
-    if (row) markPaid(row.id, 'btcpay');
-  }
-  res.json({ received: true });
-});
-
 const stripeWebhook = express.Router();
 stripeWebhook.post('/webhooks/stripe', rawBody, (req, res) => {
   const settings = getAllSettings();
@@ -259,4 +241,4 @@ stripeWebhook.post('/webhooks/stripe', rawBody, (req, res) => {
   res.json({ received: true });
 });
 
-module.exports = { checkoutRouter: router, btcpayWebhook, stripeWebhook };
+module.exports = { checkoutRouter: router, stripeWebhook };
