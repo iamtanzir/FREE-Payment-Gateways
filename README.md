@@ -18,7 +18,17 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 >
 > Note: **SSLCommerz Bangla QR** (the hosted/API product) is *not* free — it has low settlement fees and needs an SSLCommerz merchant account. The Bangla QR provider here instead uses **your own bank QR** — completely free, forever.
 
-বাংলা সারাংশ নিচে → (নীচে দেখুন)
+## 🎯 TL;DR — ৫ ধাপে পুরো system লাইভ
+
+1. `git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git && cd FREE-Payment-Gateways`
+2. `npm install`
+3. `npm start` → browser-এ `http://localhost:3000` → console-এ দেখানো admin password দিয়ে `/admin`-এ login
+4. `/admin → API Keys → Create` → key কপি → curl দিয়ে checkout বানান (নিচে ১ মিনিটের টেস্ট দেখুন)
+5. WordPress? `wordpress/free-payment-gateways/` → `wp-content/plugins/` → Activate → **Settings → FPG Gateway**-এ URL + key দিয়ে Save → WooCommerce-এ ২টা free gateway ready
+
+Deploy live: **Render** → Blueprint → `render.yaml` সিলেক্ট → done — full guide: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) (বাংলা, A to Z)
+
+বাংলা সারাংশ → [নীচে](#বাংলা-সারাংশ)
 
 ---
 

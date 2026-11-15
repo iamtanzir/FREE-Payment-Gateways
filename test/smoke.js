@@ -140,7 +140,95 @@ async function main() {
     assert(inv2.status === 'paid', 'manual invoice approved → paid');
     console.log('✓ manual bKash flow (submit → admin approve → paid)');
 
-    console.log('\n✅ SMOKE TEST PASSED — gateway is fully functional.\n');
+    // ── Input validation: bad amount / currency rejected ───────────
+    const badAmount = await fetch(`${base}/api/v1/checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${rawKey}` },
+      body: JSON.stringify({ amount: '-50', currency: 'BDT' }),
+    });
+    assert(badAmount.status === 400, 'negative amount rejected (400)');
+    const badCurrency = await fetch(`${base}/api/v1/checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${rawKey}` },
+      body: JSON.stringify({ amount: 100, currency: 'Bangladeshi' }),
+    });
+    assert(badCurrency.status === 400, 'invalid currency rejected (400)');
+    console.log('✓ input validation (amount/currency)');
+
+    // ── Invoice listing works ─────────────────────────────────────
+    const list = await fetch(`${base}/api/v1/invoices?limit=10`, { headers: { Authorization: `Bearer ${rawKey}` } }).then(r => r.json());
+    assert(Array.isArray(list.invoices) && list.invoices.length >= 2, 'invoice listing returns our invoices');
+    console.log('✓ invoice list endpoint');
+
+    // ── Wrong admin password rejected ─────────────────────────────
+    const wrongLogin = await fetch(`${base}/admin/login`, {
+      method: 'POST', redirect: 'manual',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ password: 'definitely-wrong' }),
+    });
+    assert(wrongLogin.status === 302 && (wrongLogin.headers.get('location') || '').includes('err=1'), 'wrong admin password rejected');
+    console.log('✓ wrong password rejected');
+
+    // ── Unknown API route returns JSON 404 ────────────────────────
+    const notFound = await fetch(`${base}/api/v1/definitely-not-a-route`, { headers: { Authorization: `Bearer ${rawKey}` } });
+    assert(notFound.status === 404 && (await notFound.json()).error, 'unknown route → JSON 404');
+    console.log('✓ 404 JSON for unknown routes');
+
+    // ── Cancel flow ───────────────────────────────────────────────
+    const create3 = await fetch(`${base}/api/v1/checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${rawKey}` },
+      body: JSON.stringify({ amount: 300, currency: 'BDT', description: 'Cancel flow test' }),
+    });
+    const invoice3 = await create3.json();
+    const cancel = await fetch(`${base}/api/v1/invoices/${invoice3.id}/cancel`, {
+      method: 'POST', headers: { Authorization: `Bearer ${rawKey}` },
+    });
+    assert(cancel.status === 200, 'pending invoice can be cancelled');
+    const cancelAgain = await fetch(`${base}/api/v1/invoices/${invoice3.id}/cancel`, {
+      method: 'POST', headers: { Authorization: `Bearer ${rawKey}` },
+    });
+    assert(cancelAgain.status === 409, 'double-cancel rejected (409)');
+    const closedPage = await fetch(`${base}/pay/${invoice3.id}`);
+    assert((await closedPage.text()).includes('cancelled'), 'cancelled invoice renders closed page');
+    console.log('✓ cancel flow');
+
+    // ── Admin reject (manual submission rejected → failed) ────────
+    const create4 = await fetch(`${base}/api/v1/checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${rawKey}` },
+      body: JSON.stringify({ amount: 400, currency: 'BDT', description: 'Reject flow test' }),
+    });
+    const invoice4 = await create4.json();
+    await fetch(`${base}/pay/${invoice4.id}/manual/submit`, {
+      method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ trx_id: 'REJECTME', trx_sender: '01811111111' }),
+    });
+    const reject = await fetch(`${base}/admin/invoices/${invoice4.id}/reject`, {
+      method: 'POST', redirect: 'manual', headers: { Cookie: adminCookie },
+    });
+    assert(reject.status === 302, 'admin reject redirects');
+    const inv4 = await fetch(`${base}/api/v1/invoices/${invoice4.id}`, { headers: { Authorization: `Bearer ${rawKey}` } }).then(r => r.json());
+    assert(inv4.status === 'failed', 'rejected manual payment → failed');
+    console.log('✓ manual reject flow');
+
+    // ── Admin force mark-paid fires webhook ───────────────────────
+    const create5 = await fetch(`${base}/api/v1/checkout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${rawKey}` },
+      body: JSON.stringify({ amount: 500, currency: 'BDT', description: 'Mark-paid flow', webhook_url: webhookUrl }),
+    });
+    const invoice5 = await create5.json();
+    const hitsBefore = webhookHits.length;
+    const markPaidRes = await fetch(`${base}/admin/invoices/${invoice5.id}/mark-paid`, {
+      method: 'POST', redirect: 'manual', headers: { Cookie: adminCookie },
+    });
+    assert(markPaidRes.status === 302, 'admin mark-paid redirects');
+    const deadline2 = Date.now() + 5000;
+    while (webhookHits.length === hitsBefore && Date.now() < deadline2) {
+      await new Promise(r => setImmediate(r));
+    }
+    assert(webhookHits.length === hitsBefore + 1, 'webhook delivered after admin mark-paid');
+    const inv5 = await fetch(`${base}/api/v1/invoices/${invoice5.id}`, { headers: { Authorization: `Bearer ${rawKey}` } }).then(r => r.json());
+    assert(inv5.status === 'paid', 'admin mark-paid sets invoice paid');
+    console.log('✓ admin mark-paid + webhook');
+
+    console.log('\n✅ ALL SMOKE TESTS PASSED — gateway is fully functional.\n');
   } finally {
     await new Promise(r => server.close(r));
     await new Promise(r => webhookServer.close(r));

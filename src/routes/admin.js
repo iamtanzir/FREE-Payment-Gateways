@@ -62,6 +62,7 @@ function rateLimited(ip) {
   return list.length >= 10;
 }
 function recordAttempt(ip) {
+  if (loginAttempts.size > 5000) loginAttempts.clear(); // cap memory on long-running servers
   const list = loginAttempts.get(ip) || [];
   list.push(Date.now());
   loginAttempts.set(ip, list);

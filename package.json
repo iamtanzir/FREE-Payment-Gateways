@@ -1,6 +1,6 @@
 {
   "name": "free-payment-gateways",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Self-hosted, zero-monthly-fee payment gateway. Accept bKash/Nagad/Rocket/Bank + Bangla QR (manual verification), bKash Tokenized Checkout, Stripe and demo payments. Works on localhost, any cloud/VPS and as a WordPress/WooCommerce plugin.",
   "author": "A.K.M. Tanzir Ahmed (iamtanzir)",
   "license": "MIT",
@@ -10,7 +10,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node test/smoke.js"
+    "test": "node test/smoke.js",
+    "test:plugin": "php test/plugin-smoke.php",
+    "test:all": "node test/smoke.js && php test/plugin-smoke.php"
   },
   "engines": {
     "node": ">=23.4.0"

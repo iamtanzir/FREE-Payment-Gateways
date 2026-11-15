@@ -1,6 +1,16 @@
 # 🚀 Self-Hosting — A to Z · ফ্রি Payment Gateway
 # (UrbdPay-স্টাইল সম্পূর্ণ গাইড, এই system-এর জন্য)
 
+## ⚡ TL;DR — ৫ ধাপে লাইভ
+
+1. `git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git`
+2. `cd FREE-Payment-Gateways` → `.env.example` `.env`-এ কপি করে `BASE_URL` ও `ADMIN_PASSWORD` বসান
+3. **Render:** Blueprint → repo select → done · **Docker:** `docker compose up -d --build` · **VPS:** নিচে §4D-তে ১০ লাইন
+4. `https://আপনার-domain/health` → `{"ok":true}` দেখুন
+5. `/admin` → login → API key → providers enable → WordPress plugin Settings-এ URL + key → Save — শেষ!
+
+বিস্তারিত নিচে ↓
+
 > 📥 সোর্স কোড: `git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git`
 > এই একটা service-ই পুরো payment system — checkout, API, admin, webhooks। কোনো Supabase/MySQL/Postgres **লাগে না** — SQLite ফাইলেই সব ডেটা।
 
