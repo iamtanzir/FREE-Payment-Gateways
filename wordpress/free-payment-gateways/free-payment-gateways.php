@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       FREE Payment Gateways (Self-Hosted)
  * Plugin URI:        https://github.com/iamtanzir/FREE-Payment-Gateways
- * Description:       Connect your self-hosted FREE-Payment-Gateways server to WordPress and WooCommerce. Zero monthly fees — bKash/Nagad/Rocket/Bank (manual verification), bKash Tokenized, Stripe and demo payments.
+ * Description:       Connect your self-hosted FREE-Payment-Gateways server to WordPress and WooCommerce. Zero monthly fees — bKash/Nagad/Rocket/Bank + Bangla QR (manual verification), bKash Tokenized, Stripe and demo payments.
  * Version:           1.0.0
  * Author:            iamtanzir
  * License:           MIT

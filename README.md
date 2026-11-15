@@ -10,10 +10,13 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 >
 > | Rail | Cost to run | Notes |
 > |---|---|---|
+> | 🇧🇩 **Bangla QR** | **Free** | Customer scans *your own bank-issued* Bangla QR with any bank/MFS app → pays → enters TrxID → you approve. No SSLCommerz enrollment, no API fees |
 > | 📱 **bKash / Nagad / Rocket / Upay / Bank — manual verify** | **Free** (your own wallet) | Customer sends money → you approve in dashboard → webhook fires |
 > | 🩷 **bKash Tokenized Checkout** | Free to open, per-transaction fee | Auto-verified against bKash servers (needs merchant account) |
 > | 💳 **Stripe** | Free signup, per-transaction fee | No BDT support — use USD/EUR |
 > | 🧪 **Demo** | Free | Full test flow for development, no money moves |
+>
+> Note: **SSLCommerz Bangla QR** (the hosted/API product) is *not* free — it has low settlement fees and needs an SSLCommerz merchant account. The Bangla QR provider here instead uses **your own bank QR** — completely free, forever.
 
 বাংলা সারাংশ নিচে → (নীচে দেখুন)
 
@@ -23,7 +26,7 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 
 ```
 ├── src/                              # Self-hosted gateway core (Node.js, Express, embedded SQLite)
-│   ├── providers/                    #   demo · manual MFS/bank · Stripe · bKash Tokenized
+│   ├── providers/                    #   demo · manual MFS/bank · Bangla QR · Stripe · bKash Tokenized
 │   ├── routes/                       #   REST API · hosted checkout page · admin dashboard
 │   └── …
 ├── wordpress/
@@ -167,9 +170,9 @@ Then in WordPress: *Plugins → activate “Bangladeshi Payment Gateways”*.
 
 ## বাংলা সারাংশ
 
-এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য কানেক্টর প্লাগইন + ultraDevs-এর জনপ্রিয় BD MFS QR প্লাগইন (GPL)। localhost-এ `npm start` দিয়েই চলে; যেকোনো cloud/VPS-এ Docker দিয়ে ডিপ্লয় হয়; WordPress-এ প্লাগইন হিসেবে ব্যবহার হয়।
+এই রিপোতে পাবেন: (১) নিজে হোস্ট করা যায় এমন payment gateway — **Bangla QR** (নিজের ব্যাংকের QR দিয়ে, সম্পূর্ণ ফ্রি), bKash/Nagad/Rocket/ব্যাংক থেকে **ম্যানুয়াল ভেরিফিকেশন** (বিনা পয়সায়), Stripe, এবং টেস্টের জন্য Demo। (২) WordPress-এর জন্য কানেক্টর প্লাগইন + ultraDevs-এর জনপ্রিয় BD MFS QR প্লাগইন (GPL, এতেও Bangla QR আছে)। localhost-এ `npm start` দিয়েই চলে; যেকোনো cloud/VPS-এ Docker দিয়ে ডিপ্লয় হয়; WordPress-এ প্লাগইন হিসেবে ব্যবহার হয়। Bangla QR setup: আপনার ব্যাংক/ব্যাংক অ্যাপ থেকে নেওয়া Bangla QR ছবি অ্যাডমিন → Settings → Bangla QR-এ URL দিন (ছবিটা `public/` ফোল্ডারে রেখে `/banglaqr.png` লিখুন) — তাহলে কাস্টমার স্ক্যান করে পে করবে আর TrxID দিলে আপনি verify করবেন।
 
-**মনে রাখবেন:** কার্ড/MFS কোম্পানির নিজের ফি সম্পূর্ণ মাফ নেই — সবসময় per-transaction fee থাকে। কিন্তু মাসিক/সেটআপ ফি শূন্য, এবং ম্যানুয়াল MFS ভেরিফিকেশন দিয়ে একদম বিনা খরচে পেমেন্ট নেওয়া যায় — শুধু bKash/Nagad/ব্যাংক অ্যাকাউন্ট আপনার নিজের হতে হবে।
+**মনে রাখবেন:** কার্ড/MFS কোম্পানির নিজের ফি সম্পূর্ণ মাফ নেই — সবসময় per-transaction fee থাকে (SSLCommerz Bangla QR-ও ফ্রি না — কম settlement fee আছে)। কিন্তু মাসিক/সেটআপ ফি শূন্য, এবং নিজের সার্ভারে ডেটা আপনার।
 
 ## Security
 

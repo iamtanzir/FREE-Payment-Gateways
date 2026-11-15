@@ -109,7 +109,7 @@ router.get('/admin', requireAdmin, (req, res) => {
   const today = new Date().toISOString().slice(0, 10);
   const paidToday = db.prepare("SELECT COUNT(*) AS c, COALESCE(SUM(amount_minor),0) AS s FROM invoices WHERE status='paid' AND substr(paid_at,1,10)=?").get(today);
   const pending = db.prepare("SELECT COUNT(*) AS c FROM invoices WHERE status='pending'").get();
-  const awaitingManual = db.prepare("SELECT COUNT(*) AS c FROM invoices WHERE status='pending' AND provider='manual' AND trx_id != ''").get();
+  const awaitingManual = db.prepare("SELECT COUNT(*) AS c FROM invoices WHERE status='pending' AND provider IN ('manual','banglaqr') AND trx_id != ''").get();
   const totalPaid = db.prepare("SELECT COUNT(*) AS c, COALESCE(SUM(amount_minor),0) AS s FROM invoices WHERE status='paid'").get();
   const recent = db.prepare('SELECT * FROM invoices ORDER BY created_at DESC LIMIT 15').all();
 
@@ -138,7 +138,7 @@ router.get('/admin/invoices', requireAdmin, (req, res) => {
   const rows = status
     ? db.prepare('SELECT * FROM invoices WHERE status = ? ORDER BY created_at DESC LIMIT 200').all(status)
     : db.prepare('SELECT * FROM invoices ORDER BY created_at DESC LIMIT 200').all();
-  const manualQueue = db.prepare("SELECT * FROM invoices WHERE status='pending' AND provider='manual' AND trx_id != '' ORDER BY updated_at ASC").all();
+  const manualQueue = db.prepare("SELECT * FROM invoices WHERE status='pending' AND provider IN ('manual','banglaqr') AND trx_id != '' ORDER BY updated_at ASC").all();
   res.send(layout({
     title: 'Invoices — FREE-Payment-Gateways',
     body: `
@@ -200,6 +200,8 @@ const TEXT_FIELDS = [
   ['manual_bkash_number', 'bKash number (Send Money to)'], ['manual_nagad_number', 'Nagad number'],
   ['manual_rocket_number', 'Rocket number'], ['manual_bank', 'Bank account details (free text)'],
   ['manual_note', 'Customer instructions (manual payments)'],
+  ['banglaqr_qr_image', 'Bangla QR image URL (upload into public/ and use /banglaqr.png, or an https:// link)'],
+  ['banglaqr_note', 'Bangla QR instructions for customers'],
   ['stripe_secret_key', 'Stripe secret key (sk_live_… / sk_test_…)'],
   ['bkash_app_key', 'bKash app key'], ['bkash_username', 'bKash username'],
 ];
@@ -229,8 +231,14 @@ router.get('/admin/settings', requireAdmin, (req, res) => {
       </div>
 
       <div class="card" style="margin-top:16px">
+        <h2>🇧🇩 Bangla QR — free, scan &amp; pay (your own bank QR)</h2>
+        <label><input type="checkbox" name="banglaqr_enabled" value="1" style="width:auto;margin-right:8px" ${check(s.banglaqr_enabled)}> Enable Bangla QR provider</label>
+        ${TEXT_FIELDS.slice(7, 9).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}">`).join('')}
+      </div>
+
+      <div class="card" style="margin-top:16px">
         <h2>💳 Stripe — free signup, per-transaction fee (no BDT support)</h2>
-        ${TEXT_FIELDS.slice(7, 8).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set) — leave blank to keep' : 'not set'}" autocomplete="new-password">`).join('')}
+        ${TEXT_FIELDS.slice(9, 10).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set) — leave blank to keep' : 'not set'}" autocomplete="new-password">`).join('')}
         ${SECRET_FIELDS.slice(0, 1).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
       </div>
 
@@ -238,7 +246,7 @@ router.get('/admin/settings', requireAdmin, (req, res) => {
         <h2>🩷 bKash Tokenized Checkout — auto-verified (merchant account needed)</h2>
         <label><input type="checkbox" name="bkash_enabled" value="1" style="width:auto;margin-right:8px" ${check(s.bkash_enabled)}> Enable bKash provider</label>
         <label><input type="checkbox" name="bkash_sandbox" value="1" style="width:auto;margin-right:8px" ${check(s.bkash_sandbox)}> Sandbox mode (uncheck for live payments)</label>
-        ${TEXT_FIELDS.slice(8).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}">`).join('')}
+        ${TEXT_FIELDS.slice(10).map(([k, label]) => `<label for="${k}">${esc(label)}</label><input id="${k}" name="${k}" value="${esc(s[k] || '')}">`).join('')}
         ${SECRET_FIELDS.slice(1).map(([k, label]) => `<label for="${k}">${esc(label)} — leave blank to keep current</label><input id="${k}" name="${k}" type="password" value="" placeholder="${s[k] ? '•••••••• (set)' : 'not set'}" autocomplete="new-password">`).join('')}
       </div>
 
@@ -271,6 +279,7 @@ router.post('/admin/settings', requireAdmin, (req, res) => {
   // Checkboxes
   setSetting('demo_enabled', body.demo_enabled === '1' ? '1' : '0');
   setSetting('manual_enabled', body.manual_enabled === '1' ? '1' : '0');
+  setSetting('banglaqr_enabled', body.banglaqr_enabled === '1' ? '1' : '0');
   setSetting('bkash_enabled', body.bkash_enabled === '1' ? '1' : '0');
   setSetting('bkash_sandbox', body.bkash_sandbox === '1' ? '1' : '0');
   // Password rotation

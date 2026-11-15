@@ -65,6 +65,8 @@ function createApp() {
   app.use('/', adminRouter);
 
   app.get('/', (req, res) => res.redirect('/admin'));
+  // Static files (e.g. your Bangla QR image: put it in public/ and reference /your-file.png)
+  app.use(express.static(require('path').join(__dirname, '..', 'public'), { maxAge: '1h', index: false }));
   app.get('/health', (req, res) => res.json({ ok: true, name: 'free-payment-gateways', version: '1.0.0' }));
 
   app.use((req, res) => res.status(404).json({ error: 'Not found' }));

@@ -125,6 +125,29 @@ router.post('/pay/:id/demo/complete', (req, res) => {
   successRedirect(req, res, updated);
 });
 
+// ── Bangla QR submission (awaits admin approval) ────────────────────
+router.post('/pay/:id/banglaqr/submit', (req, res) => {
+  const inv = getInvoice(req.params.id);
+  if (!inv) return errorPage(res, 'Invoice not found', 404);
+  if (inv.status !== 'pending') return successRedirect(req, res, inv);
+  const settings = getAllSettings();
+  if ((settings.banglaqr_enabled ?? '1') !== '1') return errorPage(res, 'Bangla QR provider is disabled', 400);
+  const trxId = String(req.body.trx_id || '').trim().slice(0, 100);
+  const trxSender = String(req.body.trx_sender || '').trim().slice(0, 50);
+  if (!trxId || !trxSender) return errorPage(res, 'Transaction ID and sender number are required.', 400);
+  const ts = nowIso();
+  db.prepare(`UPDATE invoices SET provider = 'banglaqr', trx_id = ?, trx_sender = ?, updated_at = ? WHERE id = ?`)
+    .run(trxId, trxSender, ts, inv.id);
+  res.send(layout({
+    title: 'Submitted', nav: false,
+    body: `<div class="checkout"><div class="card" style="text-align:center">
+      <div style="font-size:52px">🕐</div>
+      <h1>Payment submitted</h1>
+      <p class="muted">Transaction <span class="mono">${esc(trxId)}</span> is waiting for the merchant to verify it against their bank app. You will be notified once it is approved.</p>
+    </div></div>`,
+  }));
+});
+
 // ── Manual provider submission (awaits admin approval) ──────────────
 router.post('/pay/:id/manual/submit', (req, res) => {
   const inv = getInvoice(req.params.id);
