@@ -13,20 +13,16 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-add_action( 'before_woocommerce_init', function () {
-    if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
-        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'FPG_MFS_Gateway', true );
-    }
-} );
-
-add_action( 'plugins_loaded', function () {
-    if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
-        return;
-    }
+// Only loaded when WooCommerce is present (see main plugin file), so no nested closures needed.
+if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
+    return;
+}
 
     class FPG_MFS_Gateway extends WC_Payment_Gateway {
 
         const METHODS = [ 'bkash', 'nagad', 'rocket', 'upay', 'banglaqr' ];
+
+        public $form_fields = [];
 
         public function __construct() {
             $this->id                 = 'fpg_mfs';
@@ -221,4 +217,3 @@ add_action( 'plugins_loaded', function () {
             }
         }
     }
-} );

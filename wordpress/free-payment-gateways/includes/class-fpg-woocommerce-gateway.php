@@ -9,12 +9,14 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-add_action( 'plugins_loaded', function () {
-    if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
-        return;
-    }
+// Only loaded when WooCommerce is present (see main plugin file), so no nested closures needed.
+if ( ! class_exists( 'WC_Payment_Gateway' ) ) {
+    return;
+}
 
     class FPG_WooCommerce_Gateway extends WC_Payment_Gateway {
+
+        public $form_fields = [];
 
         public function __construct() {
             $this->id                 = 'fpg_gateway';
@@ -101,4 +103,3 @@ add_action( 'plugins_loaded', function () {
             ];
         }
     }
-} );

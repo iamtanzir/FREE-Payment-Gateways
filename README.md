@@ -35,7 +35,9 @@ Localhost, any cloud/VPS/shared hosting via Docker & Node, and WordPress/WooComm
 │       └── FPG Bangla QR & MFS       #   customers pay via Bangla QR / bKash / Nagad / Rocket / Upay at checkout, enter TrxID, you approve on the order screen
 ├── test/smoke.js                     # end-to-end smoke test (npm test)
 ├── Dockerfile · docker-compose.yml   # deploy anywhere
-└── NOTICE.md                         # licensing & credits
+├── render.yaml                       # one-click Render blueprint (see docs/DEPLOYMENT.md)
+├── docs/DEPLOYMENT.md                # full guide: Render · Cloudflare · Docker · checklist
+└── NOTICE.md                         # licensing & ownership
 ```
 
 ## Quick start (localhost)
@@ -69,7 +71,8 @@ On first run an admin password is generated and printed **once** to the console
 Run the full end-to-end test anytime:
 
 ```bash
-npm test
+npm test                        # Node gateway end-to-end (checkout → webhook → approval)
+php test/plugin-smoke.php       # WordPress plugin smoke test (stubs WP/WooCommerce, full order flow)
 ```
 
 ## REST API (v1)
@@ -110,6 +113,8 @@ if (req.headers['x-fpg-signature'] !== ok) return res.sendStatus(401);
 ```
 
 ## Deploying
+
+**Full step-by-step guide: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)** — Render (blueprint + manual), Cloudflare (proxy / free Tunnel), Docker, after-deploy checklist, backups, troubleshooting.
 
 ### Docker (any VPS / cloud VM)
 

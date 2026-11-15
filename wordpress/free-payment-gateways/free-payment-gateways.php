@@ -7,7 +7,7 @@
  * Author:            iamtanzir
  * License:           MIT
  * Text Domain:       free-payment-gateways
- * Requires PHP:      7.0
+ * Requires PHP:      7.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,6 +21,13 @@ require_once FPG_PLUGIN_DIR . 'includes/class-fpg-api.php';
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-return-handler.php';
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-shortcode.php';
 require_once FPG_PLUGIN_DIR . 'includes/class-fpg-admin-orders.php';
+
+// Declare HPOS (custom order tables) compatibility for the MFS gateway as early as possible.
+add_action( 'before_woocommerce_init', function () {
+    if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil::class' ) ) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', 'FPG_MFS_Gateway', true );
+    }
+} );
 
 // WooCommerce gateways are loaded only when WooCommerce is present.
 add_action( 'plugins_loaded', function () {

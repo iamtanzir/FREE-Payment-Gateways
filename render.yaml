@@ -1,0 +1,30 @@
+# Render Blueprint — FREE-Payment-Gateways
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy: Render Dashboard → New → Blueprint → connect this repo.
+# NOTE: persistent disks require a paid instance (starter). On the free plan,
+# remove the `disk:` section and `DB_PATH` (data resets on redeploy).
+services:
+  - type: web
+    name: free-payment-gateways
+    runtime: node
+    plan: starter          # change to "free" for testing; no disk on free
+    region: singapore      # closest to Bangladesh
+    buildCommand: npm install --omit=dev
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: BASE_URL      # set to https://your-service.onrender.com or your domain
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TRUST_PROXY
+        value: "true"
+      - key: NODE_VERSION
+        value: "26"
+      - key: DB_PATH
+        value: /app/data/fpg.db
+    disk:
+      name: fpg-data
+      mountPath: /app/data
+      sizeGB: 1
