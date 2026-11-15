@@ -1,235 +1,254 @@
-# Full Deployment Guide — FREE-Payment-Gateways
-# সম্পূর্ণ ডেপ্লয় গাইড — Render, Cloudflare, Docker, VPS
+# 🚀 Self-Hosting — A to Z · ফ্রি Payment Gateway
+# (UrbdPay-স্টাইল সম্পূর্ণ গাইড, এই system-এর জন্য)
 
-This is the same style of step-by-step self-hosting guide you saw from other
-gateway projects — written for **this** system, honestly, with every cost and
-limitation disclosed.
+> 📥 সোর্স কোড: `git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git`
+> এই একটা service-ই পুরো payment system — checkout, API, admin, webhooks। কোনো Supabase/MySQL/Postgres **লাগে না** — SQLite ফাইলেই সব ডেটা।
 
-**যা deploy হবে:** একটা Node.js (≥ 23.4) অ্যাপ + embedded SQLite — কোনো আলাদা
-database server লাগে না। একটাই process পুরো payment system (hosted checkout,
-API, admin dashboard, webhooks)।
+**Quick links:**
+- Render: §4A | cPanel/Shared: §4B | Hostinger: §4C | VPS+Nginx: §4D | Docker: §4E | Cloudflare: §4F | Update: §5 | FAQ: §6
 
 ---
 
-## 1. Before you start (আগে জানুন)
+## 1. ✨ সুবিধাসমূহ
 
-| Item | Free? | Notes |
-|---|---|---|
-| Render **Free** web service | ✅ Free | Prototype/demo. ⚠️ Filesystem ephemeral — restart/redeploy-এ SQLite data মুছে যায় |
-| Render **Starter** + persistent disk | Paid (~$7/mo + $0.25/GB) | Production-ready, data থাকে |
-| Cloudflare **Tunnel** (cloudflared) | ✅ Free forever | Home/office machine বা যেকোনো পিসি থেকে ফ্রি HTTPS, port forward লাগে না |
-| Cloudflare **proxy** in front of any host | ✅ Free | DDoS protection + CDN + "Full (strict)" SSL |
-| Cloudflare **Workers / Pages** | ❌ Not supported | এই অ্যাপ Node.js + filesystem + SQLite ব্যবহার করে — Workers-এ চলে না। Pages শুধু static sites |
-| Any VPS (Hostinger/Contabo/…) | From ~$4/mo | Docker দিয়ে সবচেয়ে reliable |
-| Docker anywhere | ✅ Free software | `docker compose up -d` — যেকোনো provider |
+- 🏠 নিজের সার্ভারে — **ডেটা আপনার**, কোনো third-party service লাগে না
+- 💸 **মাসিক ফি শূন্য** — host + HTTPS ছাড়া খরচ নেই
+- 🇧🇩 Bangla QR, bKash/Nagad/Rocket/Upay (manual verify, **ফ্রি**), bKash Tokenized, Stripe
+- 🔌 REST API + HMAC webhook — যেকোনো app/site সংযুক্ত হয়
+- 🛒 WordPress/WooCommerce plugin একই repo-তে
+- 🗄️ কোনো database server লাগে না (SQLite auto-create: `data/fpg.db`)
 
-**Requirement everywhere:** Node.js ≥ 23.4 **or** Docker. To serve real
-traffic you also need a domain (or use the free `*.onrender.com` /
-`*.trycloudflare.com` hostnames) and HTTPS (all options below give you HTTPS).
-
----
-
-## 2. Environment variables
-
-| Var | Example | Why |
-|---|---|---|
-| `PORT` | `3000` | Listening port |
-| `BASE_URL` | `https://pay.yourdomain.com` | **Must** be your public URL — used in checkout links & webhook payloads |
-| `ADMIN_PASSWORD` | long random string | Admin dashboard login at `/admin` |
-| `TRUST_PROXY` | `true` | Only behind a reverse proxy / Render / Cloudflare (for correct client IPs + secure cookies) |
-| `DB_PATH` | `/app/data/fpg.db` (Docker) or default `./data/fpg.db` | SQLite location |
-
-`.env` is git-ignored — never commit it.
-
----
-
-## 3. Option A — Render (step by step)
-
-### A1. One-click with render.yaml (recommended)
-
-1. Push this repo to your GitHub (done: `iamtanzir/FREE-Payment-Gateways`).
-2. Go to https://render.com → **New → Blueprint** → select the repo.
-3. Render reads `render.yaml` in the repo root and creates the service with a
-   persistent disk mounted at `/app/data`.
-4. When prompted, set:
-   - `BASE_URL` = your service URL (or custom domain, e.g. `https://pay.yourdomain.com`)
-   - `ADMIN_PASSWORD` = any long random string
-5. Wait for build (`npm install --omit=dev` → `node src/server.js`) → open
-   `https://<your-service>.onrender.com/health` → `{ "ok": true }` ✅
-6. Sign in at `/admin`.
-
-> The committed `render.yaml` uses **plan: starter** because **persistent disks
-> require a paid plan**. On the free plan, delete/comment the `disk:` section
-> and `DB_PATH`, and accept that data resets on every redeploy.
-
-### A2. Manual web service (no blueprint)
-
-1. Render → **New → Web Service** → connect GitHub → pick this repo.
-2. Settings:
-   - **Runtime:** Node — **Node version:** 24 or 26 (Render → Environment → `NODE_VERSION=26` if it defaults to older)
-   - **Build Command:** `npm install --omit=dev`
-   - **Start Command:** `node src/server.js`
-   - **Health Check Path:** `/health`
-   - **Region:** Singapore (closest to Bangladesh)
-3. **Environment:** add `BASE_URL`, `ADMIN_PASSWORD`, `TRUST_PROXY=true`,
-   `DB_PATH=/app/data/fpg.db`
-4. **Disks** (paid): mount `/app/data`, size 1 GB.
-5. Deploy → verify `/health` → open `/admin`.
-
-### A3. Custom domain on Render
-
-1. Render → service → **Settings → Custom Domains** → add `pay.yourdomain.com`.
-2. At your DNS (or Cloudflare DNS — stay in "DNS only" ☁️-grey for Render, or
-   use Cloudflare Tunnel instead; see below) point a `CNAME` to the
-   `*.onrender.com` host Render shows you.
-3. Render auto-provisions TLS. Set `BASE_URL` to the custom domain and
-   redeploy.
-
----
-
-## 4. Option B — Cloudflare
-
-Cloudflare can't run Node.js apps natively, but it gives you **free HTTPS,
-DDoS protection and a CDN** around this app, or a **free tunnel** without any
-public IP.
-
-### B1. Cloudflare proxy in front of Render / a VPS (recommended)
-
-1. In Cloudflare DNS (your domain): `pay.yourdomain.com` → `CNAME` →
-   `<your-service>.onrender.com` (or your VPS IP with an `A` record, proxied ☁️)
-2. Cloudflare → **SSL/TLS → Overview**: choose **Full (strict)** (Render/most
-   hosts serve valid certs) — or **Full** if that ever complains.
-3. **Always Use HTTPS** ✅, **Minimum TLS 1.2** ✅, **HTTP/2+QUIC** ✅,
-   **Bot Fight Mode** ✅ (Settings → Security).
-4. **Security → WAF**: add a rate-limit rule for `/admin/login*` (e.g. 10 req /
-   10 min per IP) — the app also rate-limits internally, this is belt and braces.
-5. Set `BASE_URL=https://pay.yourdomain.com`, `TRUST_PROXY=true`, redeploy.
-
-### B2. Cloudflare Tunnel — free HTTPS from a home/office PC, no public IP, no port forward
-
-Great for zero-cost setups. `cloudflared` makes an outbound-only connection to
-Cloudflare's edge, so your IP never appears in DNS and nothing to forward.
-
-```bash
-# 1. Install cloudflared (Windows: winget install --id Cloudflare.cloudflared)
-winget install --id Cloudflare.cloudflared -e
-
-# 2. Log in (opens browser to authorize your domain on Cloudflare)
-cloudflared tunnel login
-
-# 3. Create a named tunnel
-cloudflared tunnel create fpg
-#    → note the TUNNEL_ID and the credentials file it writes
-
-# 4. Point DNS at the tunnel (Cloudflare manages the record)
-cloudflared tunnel route dns fpg pay.yourdomain.com
-
-# 5. Config file  (Linux/macOS: ~/.cloudflared/config.yml — Windows: %USERPROFILE%\.cloudflared\config.yml)
-#    tunnel: <TUNNEL_ID>
-#    credentials-file: <path-to>.json
-#    ingress:
-#      - hostname: pay.yourdomain.com
-#        service: http://localhost:3000
-#      - service: http_status:404
-
-# 6. Run it (keeps running as a service)
-cloudflared tunnel run fpg
-```
-
-Then `https://pay.yourdomain.com` works worldwide, DDoS-protected, with zero
-hosting cost — the only "server" is the machine running `npm start`.
-Add `TRUST_PROXY=true` (Cloudflare sets forwarding headers) and restart.
-
-> Windows service: `cloudflared service install` installs it as a service so it
-> survives reboots.
-
-### B3. Why not Cloudflare Workers / Pages directly?
-
-- **Pages** hosts static files only — this app is a Node server (API + admin + checkout).
-- **Workers** needs V8-isolate-compatible JS: no `node:sqlite`, no filesystem,
-  no `better-*` native modules. Running this app there means a full rewrite on
-  D1 (SQLite-at-edge) + KV — possible future project, not this build.
-- Not recommended. Use **B1** or **B2** — both free.
-
-### B4. Cloudflare + cPanel subdomain (pointer)
-
-If you also host a WordPress site on cPanel, you can point the plugin at a
-gateway hosted on Render/tunnel; no inbound rules needed (the plugin only makes
-outbound HTTPS calls). MFS approvals happen inside WooCommerce — nothing
-inbound required there either.
-
----
-
-## 5. Docker (any VPS / home server / Hostinger KVM)
+## 2. 📥 সোর্স কোড ডাউনলোড
 
 ```bash
 git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git
 cd FREE-Payment-Gateways
-cp .env.example .env   # set BASE_URL, ADMIN_PASSWORD
+```
+
+WordPress-এ প্লাগইন হিসেবে লাগলে `wordpress/free-payment-gateways/` কপি করুন (নিচের §4 ডিপ্লয় শেষ হলে §7 দেখুন)।
+
+## 3. 🗄️ ডাটাবেজ সেটআপ — কিছুই করতে হবে না
+
+UrbdPay-কে Supabase লাগে — আমাদের **লাগে না**। প্রথমবার `npm start` করলে `data/fpg.db` নিজেই তৈরি হয় (tables/index সহ)। Backup = এই এক ফাইল কপি করা — §8 দেখুন।
+
+## 4. 📋 প্রয়োজনীয়তা
+
+- **Node.js ≥ 23.4** (npm দিয়ে) — অথবা **Docker**
+- একটা domain (বা ফ্রি `*.onrender.com` / `*.trycloudflare.com`)
+- HTTPS — সব বিকল্প HTTPS দেয়
+- (ঐচ্ছিক) WooCommerce 7+ ও PHP 7.4+ যদি WordPress-এ ব্যবহার করেন
+
+## 5. 🔑 Environment Variables (.env)
+
+```bash
+cp .env.example .env   # তারপর edit করুন
+```
+
+| Variable | উদাহরণ | কেন লাগে |
+|---|---|---|
+| `PORT` | `3000` | অ্যাপ যেখানে listen করবে |
+| `BASE_URL` | `https://pay.yourdomain.com` | **অবশ্যই আপনার public URL** — checkout লিংক ও webhook-এ ব্যবহৃত |
+| `ADMIN_PASSWORD` | দীর্ঘ random string | `/admin` ড্যাশবোর্ডের পাসওয়ার্ড |
+| `TRUST_PROXY` | `true` | Reverse proxy/Render/Cloudflare-এর পেছনে থাকলে |
+| `DB_PATH` | `/app/data/fpg.db` (Docker) | SQLite ফাইলের পথ |
+
+`.env` git-ignored — **কখনো commit করবেন না**।
+
+## 4A. ⚡ Render (সবচেয়ে সহজ)
+
+### A. One-click (Blueprint) — recommended
+
+1. GitHub-এ repo আছে: `iamtanzir/FREE-Payment-Gateways`
+2. https://render.com → **New → Blueprint** → repo সিলেক্ট করুন
+3. repo-র `render.yaml` Render নিজেই পড়ে নেবে (starter plan + 1 GB disk `/app/data`)
+4. জিজ্ঞেস করলে দিন:
+   - `BASE_URL` = `https://<your-service>.onrender.com` (অথবা নিজের domain)
+   - `ADMIN_PASSWORD` = দীর্ঘ random string
+5. Build (`npm install --omit=dev`) → start (`node src/server.js`) →
+   `https://<your-service>.onrender.com/health` → `{"ok":true}` দেখলে ✅
+6. `/admin`-এ লগইন → API Keys → key বানান → Settings-এ providers enable
+
+> ⚠️ **Free plan-এর বাস্তবতা:** Render free = filesystem ephemeral → restart/redeploy-এ SQLite data মুছে যায়। আসল ব্যবহারের জন্য `render.yaml`-এর `plan: starter` + disk রাখুন (~$7/mo + $0.25/GB)। শুধু demo/টেস্ট হলে free plan-এ disk অংশ বাদ দিয়ে চলবে।
+
+### B. Manual Web Service
+
+1. Render → **New → Web Service** → repo connect
+2. **Build:** `npm install --omit=dev` · **Start:** `node src/server.js` · **Health Check:** `/health` · **Region:** Singapore (বাংলাদেশের কাছে)
+3. **Environment:** `BASE_URL`, `ADMIN_PASSWORD`, `TRUST_PROXY=true`, `DB_PATH=/app/data/fpg.db`
+4. **Disks** (paid): mount `/app/data`, 1 GB
+5. Deploy → `/health` verify → `/admin`
+
+### Custom domain
+
+Render → service → **Settings → Custom Domains** → `pay.yourdomain.com` add →
+DNS-এ দেখানো `CNAME` বসান → Render নিজেই TLS দেয় → `BASE_URL` আপডেট করে redeploy।
+
+## 4B. 🖥️ cPanel / Shared Hosting — সৎ উত্তর
+
+সাধারণ cPanel-এ **Node.js চলে না** — এই gateway PHP না, Node। দুটো পথ:
+
+1. **সবকিছু cPanel-এর বাইরে** — gateway Render/Tunnel/Docker-এ রাখুন, cPanel-এ শুধু WordPress site → plugin শুধু outbound HTTPS call করে, কোনো inbound rule লাগে না। ✅ সবচেয়ে সাধারণ সমাধান
+2. **cPanel-এ Node setup** — কিছু cPanel/DirectAdmin-এ "Setup Node.js App" থাকে ("Software → Node.js Selector")। থাকলে: app বানান, `node src/server.js`, env vars (`BASE_URL=https://your-domain/nodeapp` বা subdomain), reverse proxy করে domain-এর সাথে যুক্ত করুন। যদি না থাকে — বিকল্প 1 অথবা নিচে Hostinger/VPS
+
+## 4C. 🌐 Hostinger
+
+hPanel-এ সাধারণত **"Node.js App"** menu থাকে (Hosting → Advanced → Node.js):
+
+1. Node.js app বানান → Node version **24+** (না পেলে "npm run" দিয়ে CLI mode)
+2. Project files upload (File Manager/`git clone` via SSH যদি থাকে) → `npm install --omit=dev`
+3. **Startup file:** `src/server.js` · **Mode:** production · **Port:** hPanel যেটা দেয়
+4. Env vars: `BASE_URL=https://yourdomain.com`, `ADMIN_PASSWORD=...`, `TRUST_PROXY=true`, `PORT=<hPanel-এর পোর্ট>`
+5. Subdomain (যেমন `pay.yourdomain.com`) app-এর সাথে যুক্ত করুন
+6. Node app না থাকলে → Gateway টি Render/Docker-এ চালিয়ে Hostinger-সাইটে plugin দিয়ে সংযুক্ত করুন (উপরে 4B-1)
+
+## 4D. 🐧 VPS (Ubuntu + Nginx) — production standard
+
+```bash
+# 1. Node 26 (NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_26.x | sudo -E bash -
+sudo apt install -y nodejs git nginx certbot python3-certbot-nginx
+
+# 2. App
+sudo mkdir -p /opt/fpg && sudo chown $USER /opt/fpg
+git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git /opt/fpg && cd /opt/fpg
+npm install --omit=dev
+cp .env.example .env   # BASE_URL=https://pay.yourdomain.com, ADMIN_PASSWORD=..., TRUST_PROXY=true, PORT=3000
+
+# 3. systemd service
+sudo tee /etc/systemd/system/fpg.service >/dev/null <<'EOF'
+[Unit]
+Description=FREE-Payment-Gateways
+After=network.target
+[Service]
+WorkingDirectory=/opt/fpg
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+Environment=NODE_ENV=production
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl enable --now fpg
+
+# 4. nginx reverse proxy + free TLS
+sudo tee /etc/nginx/sites-available/fpg >/dev/null <<'EOF'
+server {
+  listen 80;
+  server_name pay.yourdomain.com;
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+EOF
+sudo ln -sf /etc/nginx/sites-available/fpg /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d pay.yourdomain.com
+```
+
+`pay.yourdomain.com`-এর A record সার্ভারের IP-তে থাকতে হবে। HTTPS auto-renew (certbot timer) — কিছু করতে হবে না।
+
+## 4E. 🐳 Docker
+
+```bash
+git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git && cd FREE-Payment-Gateways
+cp .env.example .env     # BASE_URL, ADMIN_PASSWORD সেট করুন
 docker compose up -d --build
-curl localhost:3000/health
+curl localhost:3000/health   # {"ok":true}
 ```
 
-Put Cloudflare Tunnel (B2) or Caddy/nginx in front for HTTPS. Data persists in
-the `fpg-data` volume.
+Data থাকে `fpg-data` volume-এ। HTTPS-এর জন্য সামনে Cloudflare Tunnel (নিচে 4F-B) বা Caddy দিন।
 
-**Update flow:**
+## 4F. ☁️ Cloudflare
+
+### A. Cloudflare proxy যেকোনো host-এর সামনে (recommended)
+
+1. DNS: `pay.yourdomain.com` → CNAME `<your-service>.onrender.com` (বা VPS-এ `A` record) → **Proxied** ☁️
+2. **SSL/TLS → Overview:** **Full (strict)** (Render/Certbot-এর বৈধ cert থাকলে)
+3. **Always Use HTTPS** ✅ · **Minimum TLS 1.2** ✅ · **Bot Fight Mode** ✅
+4. **WAF**-এ `/admin/login*`-এ rate limit (10 req / 10 min / IP) — app-এও built-in limit আছে
+5. `BASE_URL=https://pay.yourdomain.com` + `TRUST_PROXY=true` → redeploy করুন
+
+### B. Cloudflare Tunnel — সম্পূর্ণ ফ্রি, public IP/port forward লাগে না (home/office PC-তেও)
+
+```powershell
+# Windows (PowerShell):
+winget install --id Cloudflare.cloudflared -e
+cloudflared tunnel login          # browser খুলে domain authorize করুন
+cloudflared tunnel create fpg     # TUNNEL_ID দেখিয়ে দেবে + credentials file লিখবে
+cloudflared tunnel route dns fpg pay.yourdomain.com
+# config (%USERPROFILE%\.cloudflared\config.yml):
+#   tunnel: <TUNNEL_ID>
+#   credentials-file: <path-to>.json
+#   ingress:
+#     - hostname: pay.yourdomain.com
+#       service: http://localhost:3000
+#     - service: http_status:404
+cloudflared tunnel run fpg
+# স্থায়ী service হিসেবে: cloudflared service install
+```
+
+সব traffic Cloudflare edge থেকে যায় — আপনার IP কখনও দেখা যায় না, DDoS protection ফ্রি, HTTPS ফ্রি।
+
+### C. কেন Workers/Pages নয়
+
+**Pages** = শুধু static file। **Workers** = V8 isolate — `node:sqlite`, filesystem, native module চলে না; পুরোটা D1 (SQLite-at-edge) দিয়ে নতুন করে লিখতে হতো। ✅ ফ্রি HTTPS চান → **A বা B** ব্যবহার করুন।
+
+## 5. 🔄 Update & Upgrade
 
 ```bash
+cd /opt/fpg                     # অথবা repo folder
 git pull
-docker compose up -d --build      # downtime ≈ seconds
+npm install --omit=dev          # deps পরিবর্তন হলে
+sudo systemctl restart fpg      # VPS
+# Docker: docker compose up -d --build   (downtime ≈ সেকেন্ড)
+# Render:  git push → auto redeploy (একই repo), বা Manual Deploy বাটনে click
 ```
 
----
+আপগ্রেডের আগে `data/fpg.db` backup নিন (নিচের §8)।
 
-## 6. After first deploy — 10-minute checklist
+## 6. ❓ Troubleshooting / FAQ
 
-1. `/health` → `{ "ok": true }`
-2. `/admin` → log in with your `ADMIN_PASSWORD` → **change it** (Settings)
-3. **API Keys → Create API key** → label "production" → copy the key
-4. **Settings**: brand name, `BASE_URL` (exactly the public URL),
-   enable **Bangla QR** + paste your QR image URL, enable **Manual** MFS numbers
-   → **Save**
-5. WooCommerce: `Settings → FPG Gateway` → Base URL + API key → save → test a
-   ৳1–10 order via **bKash/Nagad (on-hold)** → confirm TrxID box on the order
-   → Approve → order completes
-6. Non-Woo sites: create checkout via API, pay, check webhook signature
-   (`README.md → Webhooks`)
+| উপসর্গ | সমাধান |
+|---|---|
+| `/health` OK কিন্তু checkout লিংক ভাঙে | `BASE_URL` ভুল/নেই — ঠিক করে redeploy করুন |
+| Admin-এ login loop | reverse proxy-র পেছনে থাকলে `TRUST_PROXY=true` সেট করুন |
+| Render-এ data "মুছে গেল" | Free plan = ephemeral filesystem → Starter + disk নিন, অথবা Tunnel/Docker |
+| Cloudflare 502/504 | origin down/port ভুল; tunnel চলছে কিনা `cloudflared tunnel list`; `… logs` দেখুন |
+| Webhook আসে না | `webhook_url` server থেকে reachable কিনা, signature ঠিক কিনা; server-এর ঘড়ি (NTP) ঠিক আছে কিনা |
+| cPanel-এ Node নেই | উপরে 4B/4C বা 4F-B (Tunnel) — কোনো inbound rule লাগে না |
+| bKash sandbox চলে, live চলে না | Settings-এ `bkash_sandbox=0` + live credentials দিন |
+| প্রথম run-এ admin password | Console-এ একবার দেখায় (বা `.env`-এ `ADMIN_PASSWORD` সেট করুন) |
 
----
+**FAQ**
+- **কত খরচ?** Render/Tunnel-এ host ছাড়া 0 টাকা; VPS/Docker-এ শুধু VPS ভাড়া।
+- **WordPress-এ data কোথায়?** Order-এর meta-তেই TrxID — অতিরিক্ত table লাগে না। Gateway-চালিত mode-এ সব gateway-র SQLite-এ।
+- **কয়টা store/site?** যতগুলো ইচ্ছা — সব একই API key বা আলাদা key দিয়ে, সব একই `/admin` থেকে দেখবেন।
+- **Vercel/Netlify?** চলবে না — persistent filesystem লাগে। Render/Docker/Tunnel বেছে নিন।
 
-## 7. Backups
+## 7. 🛒 WordPress/WooCommerce সংযুক্ত করা
 
-The whole database is one file: `data/fpg.db` (or `/app/data/fpg.db`).
+1. `wordpress/free-payment-gateways/` → `wp-content/plugins/`-এ কপি → **Activate**
+2. **Settings → FPG Gateway**: Gateway Base URL (`https://pay.yourdomain.com`) + API key (`/admin → API Keys`) দিয়ে Save
+3. WooCommerce: **Payments** ট্যাবে দুটো নতুন gateway —
+   - **FPG Bangla QR & MFS (Manual Verify)** — checkout-এ QR/number, TrxID field; order থেকে Approve/Reject
+   - **FPG Self-Hosted Gateway** — customer-কে hosted checkout-এ redirect; order return-এ auto-complete
+4. সাধারণ page-এ `[fpg_pay amount="500" button="Pay ৳500"]`
+
+## 8. 🔒 Backup / Restore
 
 ```bash
-# stop the app (or it's fine with WAL), then copy
-cp data/fpg.db backups/fpg-$(date +%F).db
+# Backup (সব ডেটা এক ফাইলে):
+cp data/fpg.db backups/fpg-$(date +%F).db        # বা Docker volume থেকে docker cp
+# Restore: app থামাতে → ফাইল ফেরত কপি → app চালু
 ```
 
-Restore = stop app → copy back → start. Docker: `docker cp` from the
-`fpg-data` volume.
+## 9. ✅ Go-live checklist
 
----
-
-## 8. Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| `/health` OK but payments stuck | `BASE_URL` wrong/missing — fix & redeploy (checkout links break otherwise) |
-| Admin login loop | Set `TRUST_PROXY=true` behind any proxy/Render/Cloudflare |
-| 502/504 from Cloudflare | origin down or wrong port; tunnel not running; check `cloudflared tunnel list` and `… logs` |
-| Webhooks never arrive | `webhook_url` unreachable from the server, or wrong signature — verify server time (NTP) |
-| Render deploys but data "disappears" | Free plan = ephemeral FS; add a persistent disk or use Tunnel/Docker |
-| bKash sandbox works, live does not | `bkash_sandbox` must be `0` in Settings + correct live credentials |
-| Admin shows many 401s | Normal during internet scans — internal login rate-limit + optional WAF rule handles it |
-
-## 9. Security checklist
-
-- [ ] HTTPS everywhere (Render auto / Cloudflare / Tunnel / Caddy)
-- [ ] Strong, unique `ADMIN_PASSWORD` + new API keys (not the sandbox key)
-- [ ] `TRUST_PROXY=true` only when behind a real proxy
-- [ ] Cloudflare WAF rate-limit on `/admin/login*`
-- [ ] Rotate webhook secrets quarterly (`Settings → new API key`)
-- [ ] Back up `fpg.db` on a schedule
-- [ ] Keep the repo private if you fork it with your config inside; `.env` is git-ignored
+- [ ] HTTPS (Render auto / certbot / Cloudflare) + `TRUST_PROXY=true`
+- [ ] শক্তিশালী unique `ADMIN_PASSWORD` + প্রথম API key rotate
+- [ ] `BASE_URL` ঠিক public URL
+- [ ] Cloudflare WAF rate-limit `/admin/login*` (ঐচ্ছিক, কিন্তু সুপারিশকৃত)
+- [ ] `fpg.db`-র নিয়মিত backup
+- [ ] একটা ৳1 test order পুরোপুরি যাচাই (TrxID → Approve → thank-you page)
