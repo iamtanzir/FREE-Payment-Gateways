@@ -1,0 +1,15 @@
+# Keep the image clean and portable (important when building on Windows/Mac)
+node_modules
+data
+.git
+.github
+.env
+.env.*
+!.env.example
+*.log
+docs/*.docx
+test
+wordpress
+.vercel
+.wrangler
+.vercel

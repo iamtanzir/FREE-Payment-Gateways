@@ -1,0 +1,11 @@
+{
+  // Static-assets-only deploy (no Worker script).
+  // The payment gateway itself is a stateful Node.js/Express app and cannot run
+  // on Cloudflare Workers — this publishes the landing page in ./public only.
+  // To run the gateway, deploy it on Render/Docker/VPS (see docs/DEPLOYMENT.md).
+  "name": "free-payment-gateways",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./public"
+  }
+}

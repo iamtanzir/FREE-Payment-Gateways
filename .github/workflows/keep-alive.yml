@@ -1,0 +1,27 @@
+# ⚠️ DISABLED by default — pinging 24/7 burns Render's 750 free instance-hours/month.
+# When the quota runs out, Render suspends ALL free services in the workspace until the
+# next calendar month (this is what happened to free-mfs-bd: "Free usage limit reached").
+#
+# The schedule is intentionally REMOVED. The workflow is now manual-only
+# (Actions → "Keep Render awake" → Run workflow) so it can be used to sanity-check
+# /health without keeping the service permanently awake.
+#
+# If you want always-on uptime without paying: see docs/MIGRATE-FREE-HOST.md
+# (Oracle Cloud Always Free VPS or Google Cloud Run — both $0).
+name: Keep Render awake (manual only)
+
+on:
+  workflow_dispatch:          # manual "Run workflow" only — no cron schedule
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping health endpoint
+        env:
+          RENDER_APP_URL: ${{ vars.RENDER_APP_URL }}
+        run: |
+          URL="${RENDER_APP_URL:-https://free-mfs-bd.onrender.com}/health"
+          echo "Pinging $URL"
+          curl -fsSI --max-time 20 "$URL" && echo " ✅ alive" || { echo " ❌ ping failed"; exit 1; }

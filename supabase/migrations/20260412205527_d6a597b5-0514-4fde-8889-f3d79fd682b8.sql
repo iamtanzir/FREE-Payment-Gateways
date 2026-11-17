@@ -1,0 +1,2 @@
+ALTER TABLE public.devices ADD COLUMN IF NOT EXISTS otp TEXT;
+ALTER TABLE public.devices ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMPTZ;

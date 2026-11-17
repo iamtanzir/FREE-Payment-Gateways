@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREE Payment Gateways — Self-hosted, zero-monthly-fee payment gateway (Bangladesh &amp; everywhere)</title>
+<meta name="description" content="Open-source, self-hosted payment gateway. Accept Bangla QR, bKash/Nagad/Rocket/Upay/Bank (manual verification) and demo payments — zero monthly fees, zero per-transaction fees, only free rails.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23fbbf24' d='M55 2 18 56h24L40 98 82 40H56z'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0b1220;
+    --bg-soft: #111a2e;
+    --card: #16223c;
+    --border: #243356;
+    --text: #e8edf7;
+    --muted: #9aa7c4;
+    --accent: #fbbf24;
+    --accent-dark: #d4a016;
+    --green: #34d399;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body {
+    background: radial-gradient(1100px 500px at 50% -10%, #1b2b4d 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans Bengali", sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  .wrap { width: 100%; max-width: 1080px; min-width: 0; margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  nav { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; padding: 20px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); }
+  .brand svg { width: 34px; height: 34px; }
+  .brand span { font-weight: 800; font-size: 1.15rem; letter-spacing: .2px; }
+  .brand small { display: block; font-weight: 500; color: var(--muted); font-size: .72rem; letter-spacing: .4px; text-transform: uppercase; }
+  .gh-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--border); color: var(--text); text-decoration: none; padding: 9px 16px; border-radius: 10px; font-weight: 600; font-size: .9rem; transition: border-color .15s; }
+  .gh-btn:hover { border-color: var(--accent); }
+
+  /* Hero */
+  header { text-align: center; padding: 56px 0 40px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(251,191,36,.12); border: 1px solid rgba(251,191,36,.35); color: var(--accent); font-size: .78rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; border-radius: 999px; padding: 6px 18px; margin-bottom: 22px; }
+  h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); line-height: 1.15; letter-spacing: -.5px; font-weight: 800; }
+  h1 .hi { color: var(--accent); }
+  .sub { margin: 18px auto 0; max-width: 720px; color: var(--muted); font-size: 1.1rem; }
+  .cta-row { margin-top: 30px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; border-radius: 12px; padding: 14px 26px; font-size: 1rem; }
+  .btn-primary { background: var(--accent); color: #241a02; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text); background: transparent; }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  /* Notice */
+  .notice { margin: 34px auto 0; max-width: 860px; text-align: left; background: var(--bg-soft); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; padding: 16px 20px; font-size: .92rem; color: #cdd6ec; }
+  .notice strong { color: var(--accent); }
+  .notice code { background: #0d1425; border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; font-size: .85em; }
+
+  /* Sections */
+  section { padding: 56px 0 8px; }
+  h2 { font-size: clamp(1.4rem, 3vw, 2rem); letter-spacing: -.3px; margin-bottom: 8px; }
+  .lead { color: var(--muted); max-width: 720px; margin-bottom: 26px; }
+
+  /* Cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .card h3 { font-size: 1.02rem; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .card p { color: var(--muted); font-size: .9rem; }
+  .tag { font-size: .68rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase; border-radius: 6px; padding: 2px 8px; vertical-align: 2px; }
+  .tag-free { background: rgba(52,211,153,.15); color: var(--green); border: 1px solid rgba(52,211,153,.4); }
+  .tag-fee { background: rgba(251,191,36,.12); color: var(--accent); border: 1px solid rgba(251,191,36,.35); }
+
+  /* Steps */
+  .steps { counter-reset: step; list-style: none; display: grid; gap: 12px; }
+  .steps li { counter-increment: step; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px 14px 58px; position: relative; font-size: .95rem; }
+  .steps li::before { content: counter(step); position: absolute; left: 16px; top: 14px; width: 30px; height: 30px; border-radius: 9px; background: var(--accent); color: #241a02; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .steps code, .lead code, .notice code, .card code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; overflow-wrap: anywhere; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; border: 1px solid var(--border); border-radius: 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 560px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  thead th { background: var(--bg-soft); color: var(--accent); font-size: .78rem; letter-spacing: .6px; text-transform: uppercase; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  footer { margin-top: auto; border-top: 1px solid var(--border); padding: 28px 0 40px; color: var(--muted); font-size: .86rem; }
+  footer .wrap { display: block; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .credit { text-align: center; line-height: 1.7; }
+  footer .credit a { font-weight: 700; white-space: nowrap; }
+  .heart { color: #fb7185; }
+
+  /* Mock browser / merchant dashboard illustration */
+  .browser { max-width: 100%; background: var(--bg-soft); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+  .chrome { display: flex; align-items: center; gap: 10px; background: #0d1425; border-bottom: 1px solid var(--border); padding: 10px 14px; min-width: 0; }
+  .dots { display: flex; gap: 6px; flex: 0 0 auto; }
+  .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .dot-r { background: #f87171; } .dot-y { background: #fbbf24; } .dot-g { background: #34d399; }
+  .addr { flex: 1 1 0; min-width: 0; background: #111a2e; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: .78rem; padding: 5px 12px; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mock { padding: 14px; background: #0b1220; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mnav { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 10px 14px; background: #111a2e; border: 1px solid var(--border); border-radius: 10px; font-size: .8rem; color: var(--muted); }
+  .mnav .mbrand { font-weight: 800; color: var(--accent); margin-right: 4px; }
+  .mnav .active { color: var(--text); background: #1b2542; border-radius: 6px; padding: 2px 10px; }
+  .stats4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0 10px; }
+  .statcard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+  .statcard .n { font-size: 1.35rem; font-weight: 800; letter-spacing: -.3px; }
+  .statcard small { display: block; color: var(--muted); font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+  .warn-n { color: var(--accent); }
+  .mock-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; }
+  .mock-panel h4 { font-size: .78rem; color: #c9d3f5; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 8px; }
+  .qrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 9px 11px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-soft); margin-top: 8px; }
+  .qrow .meta { font-size: .78rem; color: var(--muted); font-family: ui-monospace, Consolas, monospace; }
+  .qbtn { font-size: .72rem; font-weight: 800; border: 0; border-radius: 8px; padding: 6px 13px; cursor: default; font-family: inherit; }
+  .approve { background: #34d399; color: #052e21; } .reject { background: #f87171; color: #3f0a0a; }
+  .mock-table { width: 100%; border-collapse: collapse; font-size: .78rem; min-width: 0; }
+  .mock-table th, .mock-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  .mock-table thead th { background: transparent; color: var(--muted); font-size: .62rem; text-transform: uppercase; letter-spacing: .5px; }
+  .mock-table tr:last-child td { border-bottom: none; }
+  .mpill { font-size: .64rem; padding: 2px 9px; border-radius: 99px; font-weight: 800; display: inline-block; }
+  .mpill-paid { background: #064e3b; color: #6ee7b7; } .mpill-pending { background: #422006; color: #fcd34d; } .mpill-failed { background: #450a0a; color: #fca5a5; }
+  .caption { color: var(--muted); font-size: .8rem; margin-top: 10px; text-align: center; }
+  @media (max-width: 720px) {
+    .wrap { padding: 0 18px; }
+    nav { padding: 16px 0; gap: 10px 14px; }
+    .brand small { display: none; }
+    .gh-btn span { display: none; }
+    .gh-btn { padding: 9px 12px; }
+    header { padding: 40px 0 30px; }
+    section { padding: 44px 0 8px; }
+    .notice { margin-top: 26px; padding: 14px 16px; }
+    .sub { font-size: 1rem; }
+    .stats4 { grid-template-columns: repeat(2, 1fr); }
+    .mnav { font-size: .72rem; gap: 10px; }
+    .mnav, .stats4, .mock-panel { min-width: 500px; }
+  }
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    nav { padding: 14px 0; }
+    .brand { min-width: 0; }
+    .gh-btn { margin-left: auto; }
+    .cta-row { gap: 10px; }
+    .cta-row .btn { width: 100%; justify-content: center; }
+    .btn { padding: 13px 20px; }
+    .card { padding: 16px; }
+    .steps li { padding: 14px 14px 14px 52px; }
+    .steps li::before { left: 12px; top: 14px; width: 28px; height: 28px; }
+    .browser { border-radius: 12px; }
+    .mock { padding: 10px; }
+    .mnav, .stats4, .mock-panel { min-width: 460px; }
+    .mock-table { font-size: .72rem; }
+    /* 5 columns never fit a phone: drop the audience/cost columns and let the
+       remaining three reflow, so the important "what / where" stays readable. */
+    #mfs table { min-width: 0; font-size: .8rem; }
+    #mfs th, #mfs td { padding: 8px 7px; }
+    #mfs th:nth-child(2), #mfs td:nth-child(2), #mfs th:nth-child(5), #mfs td:nth-child(5) { display: none; }
+    #deploy table { min-width: 0; font-size: .8rem; }
+    #deploy th, #deploy td { padding: 8px 7px; }
+    footer { padding: 24px 0 28px; }
+  }
+  @media (max-width: 380px) {
+    .brand span { font-size: .95rem; }
+    .mnav, .stats4, .mock-panel { min-width: 420px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="https://github.com/iamtanzir/FREE-Payment-Gateways">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><path fill="#fbbf24" d="M55 2 18 56h24L40 98 82 40H56z"/></svg>
+      <span>FREE Payment Gateways<small>Self-hosted · Zero monthly fee</small></span>
+    </a>
+    <a class="gh-btn" href="https://github.com/iamtanzir/FREE-Payment-Gateways" rel="noopener" aria-label="GitHub repository">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <span>GitHub</span>
+    </a>
+  </nav>
+</div>
+
+<header class="wrap">
+  <div class="pill">⚡ Open Source · AGPL-3.0 License</div>
+  <h1>Accept payments in Bangladesh<br>with <span class="hi">zero monthly fees</span> — forever.</h1>
+  <p class="sub">Self-hosted payment gateway: Bangla QR, bKash / Nagad / Rocket / Upay / Bank (manual verification) and a full demo mode. One Node.js app, your own server, your own money flow — free rails only, zero per-transaction fees.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/iamtanzir/FREE-Payment-Gateways#quick-start-localhost">Quick start →</a>
+    <a class="btn btn-ghost" href="https://github.com/iamtanzir/FREE-Payment-Gateways#rest-api-v1">Read the API docs</a>
+  </div>
+
+  <div class="notice">
+    <strong>Heads up:</strong> this Cloudflare page is a static landing site only. The payment gateway itself is a stateful
+    Node.js ≥ 22.5 server (Express + embedded SQLite or Postgres) and <strong>cannot run on Cloudflare Workers/Pages</strong>.
+    <strong>So <code>this-url.workers.dev/admin</code> will show a 404 — the merchant dashboard and login page will NOT appear here.</strong>
+    To run the gateway, deploy it on Render, Docker, a VPS, or any Node host — see
+    <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/DEPLOYMENT.md">docs/DEPLOYMENT.md</a>
+    (বাংলা guide included) and <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/MIGRATE-FREE-HOST.md">docs/MIGRATE-FREE-HOST.md</a> for $0 always-on alternatives.
+    Once it's deployed on a Node host (optionally behind Cloudflare Tunnel), your merchant dashboard lives at <code>https://pay.yourdomain.com/admin</code>.
+  </div>
+</header>
+
+<section class="wrap" id="rails">
+  <h2>Payment rails</h2>
+  <p class="lead">No gateway can move money with truly zero cost — the networks charge something. What you get here: zero monthly/setup fees, and rails that are genuinely free to run.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>📱 Bangla QR <span class="tag tag-free">Free</span></h3>
+      <p>Customer scans <em>your own bank-issued</em> Bangla QR with any bank/MFS app → pays → enters TrxID → you approve. No SSLCommerz enrollment, no API fees.</p>
+    </div>
+    <div class="card">
+      <h3>💸 bKash / Nagad / Rocket / Upay / Bank <span class="tag tag-free">Free</span></h3>
+      <p>Manual verification: customer sends money to your own wallet/account, you approve in the admin dashboard, a signed webhook fires.</p>
+    </div>
+    <div class="card">
+      <h3>📲 SMS auto-verify <span class="tag tag-free">Free · beta</span></h3>
+      <p>তোমার MFS SIM-যে ফোনে আছে — SMS এলেই gateway নিজেই match করে invoice auto-paid করে দেয়। Forwarder app (MacroDroid/Tasker) + ১০ মিনিট। Self-hosted, zero fee, zero manual TrxID checks.</p>
+      <p style="margin-top:8px"><a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/AUTO-VERIFY.md">Setup guide →</a></p>
+    </div>
+    <div class="card">
+      <h3>🧪 Demo mode <span class="tag tag-free">Free</span></h3>
+      <p>Full test flow for development — simulated payment, webhooks, approval — no money moves.</p>
+    </div>
+    <div class="card">
+      <h3>🧩 Website / ISP / POS / সবাই</h3>
+      <p>Website-এ checkout, ISP-র মাসিক বিল (SMS + link), POS counter-এ payment — সবই। <strong>Payment Links</strong> (<code>/admin → Pay Links</code>) — fixed/reusable pay URL, কোনো code লাগে না। Recipes: <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/USE-CASES.md">USE-CASES.md</a></p>
+    </div>
+    <div class="card">
+      <h3>🌐 WordPress / WooCommerce <span class="tag tag-free">Free</span></h3>
+      <p>Bundled AGPL-3.0 plugin: two WooCommerce gateways plus an <code>[fpg_pay]</code> shortcode for any page or post.</p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="dashboard">
+  <h2>Merchant যা দেখবে — Admin Dashboard</h2>
+  <p class="lead">Merchant তাঁর নিজের deploy করা instance-এ <code>/admin</code> e login করবে। সেখানে থাকবে: আজকের sales, pending invoices, আর যেগুলো manual/Bangla QR টাকা এসেছে কিন্তু TrxID দিয়ে customer জমা দিয়েছে — সেগুলোর approve/reject queue। নিচেরটা illustrated preview; সব ৳ amount sample data।</p>
+
+  <div class="browser" role="img" aria-label="Illustration of the FREE Payment Gateways merchant admin dashboard, showing paid today stats, a manual-approval queue and recent invoices">
+    <div class="chrome">
+      <div class="dots"><i class="dot-r"></i><i class="dot-y"></i><i class="dot-g"></i></div>
+      <div class="addr">https://pay.yourdomain.com/admin</div>
+    </div>
+    <div class="mock">
+      <div class="mnav">
+        <span class="mbrand">⚡ FREE Payment Gateways</span>
+        <span class="active">Dashboard</span><span>Invoices</span><span>Settings</span><span>API Keys</span><span>Sign out</span>
+      </div>
+
+      <div class="stats4">
+        <div class="statcard"><div class="n">12</div><small>Paid today</small></div>
+        <div class="statcard"><div class="n">৳18,450</div><small>Volume today</small></div>
+        <div class="statcard"><div class="n">7</div><small>Pending invoices</small></div>
+        <div class="statcard"><div class="n warn-n">2</div><small>Manual approvals waiting</small></div>
+      </div>
+
+      <div class="mock-panel">
+        <h4>⏳ Waiting for verification (manual / Bangla QR)</h4>
+        <div class="qrow">
+          <div><strong>bKash · ৳620</strong><div class="meta">Grocery order #1042 · TrxID 8N7K2M9A1Q · from 01711000000</div></div>
+          <div><button class="qbtn approve">Approve</button> <button class="qbtn reject">Reject</button></div>
+        </div>
+        <div class="qrow">
+          <div><strong>Bangla QR · ৳1,850</strong><div class="meta">Premium T-shirt x2 · TrxID 9B2T81C4KD</div></div>
+          <div><button class="qbtn approve">Approve</button> <button class="qbtn reject">Reject</button></div>
+        </div>
+      </div>
+
+      <div class="mock-panel">
+        <h4>Recent invoices</h4>
+        <table class="mock-table">
+          <thead><tr><th>ID</th><th>Amount</th><th>Provider</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>inv_gVttpFBHXbhyLj0d</td><td>৳1,850</td><td>demo</td><td><span class="mpill mpill-paid">PAID</span></td></tr>
+            <tr><td>inv_35BDEuGZQi0YlNgF</td><td>৳620</td><td>manual (bKash)</td><td><span class="mpill mpill-pending">PENDING</span></td></tr>
+            <tr><td>inv_ZyJjaFuGCv5EztDD</td><td>৳12,900</td><td>—</td><td><span class="mpill mpill-pending">PENDING</span></td></tr>
+            <tr><td>inv_Z2d4SE7PESl8rOuu</td><td>৳350.50</td><td>—</td><td><span class="mpill mpill-failed">FAILED</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="caption">↑ Illustrated preview (sample data). পুরোটা দেখতে উপরের Quick start follow করে <code>npm start</code> চালিয়ে <code>/admin</code>-এ login করে দেখুন।</p>
+</section>
+
+<section class="wrap" id="mfs">
+  <h2>কোন MFS set করবেন — কীভাবে (বাংলাদেশ)</h2>
+  <p class="lead">সবচেয়ে সহজে শুরু: <strong>Manual bKash + Nagad + Bangla QR</strong> — পুরোপুরি free। সব settings <code>/admin → Settings</code> থেকে হবে, কোড touch লাগে না। এই project-এ ইচ্ছাকৃতভাবে কোনো per-transaction-fee provider (bKash Tokenized, Stripe) নেই — MFS-এ কোনো charge লাগে না।</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Rail</th><th>কাকে লাগবে</th><th>কী লাগবে</th><th>কোথায় set করবেন</th><th>খরচ</th></tr></thead>
+      <tbody>
+        <tr><td><strong>📱 Manual bKash</strong></td><td>সবার জন্য — শুরু করুন এখান থেকেই</td><td>আপনার bKash নম্বর (personal বা merchant)</td><td>Settings → <em>Enable manual payments</em> ✅ → <em>bKash number (Send Money to)</em> → Save</td><td>Free</td></tr>
+        <tr><td><strong>📱 Manual Nagad</strong></td><td>Nagad-heavy customer base</td><td>আপনার Nagad নম্বর</td><td>Settings → <em>Nagad number</em></td><td>Free</td></tr>
+        <tr><td><strong>🚀 Manual Rocket</strong></td><td>DBBL Rocket ব্যবহারকারীরা</td><td>Rocket নম্বর (যেমন 017…-1)</td><td>Settings → <em>Rocket number</em></td><td>Free</td></tr>
+        <tr><td><strong>🏦 Bank account</strong></td><td>বড় amount / B2B</td><td>Bank account details (free text)</td><td>Settings → <em>Bank account details</em></td><td>Free</td></tr>
+        <tr><td><strong>🇧🇩 Bangla QR</strong></td><td>সবার জন্য — scan করে pay</td><td>আপনার <em>নিজের ব্যাংকের</em> Bangla QR (DBBL Nexus / City Bank / EBL / যেকোনো bank app) → QR টা image আকারে <code>public/banglaqr.png</code>-এ আপলোড → URL <code>/banglaqr.png</code></td><td>Settings → <em>Enable Bangla QR</em> ✅ → <em>Bangla QR image URL</em> + <em>instructions</em></td><td>Free</td></tr>
+        <tr><td><strong>🧪 Demo</strong></td><td>development / testing</td><td>কিছুই না — simulated payment</td><td>Settings → <em>Enable demo payments</em> ✅ (default on; production-এ off করতে পারেন)</td><td>Free</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 style="margin-top:34px">Payment approve হওয়ার flow</h2>
+  <p class="lead">Manual/Bangla QR-এর ক্ষেত্রে নিজে নিজে paid mark হয় না — এটা যেন fraud হয় (customer মিথ্যা TrxID দিতে পারে); merchant verify করে approve দেয়:</p>
+  <ol class="steps">
+    <li>Customer checkout page-এ (<code>/pay/:id</code>) আপনার bKash/Nagad/Rocket নম্বরে বা Bangla QR-এ টাকা পাঠায় → <strong>TrxID + sender number</strong> দেয়</li>
+    <li>Invoice <code>pending</code> থাকে — কোনো টাকা auto-credit হয় না</li>
+    <li>Merchant <code>/admin → Invoices</code>-এ ঢুকে <strong>TrxID মিলিয়ে দেখে</strong> (নিজের bKash/Nagad app-এ) → <strong>Approve</strong> → invoice <code>paid</code> + webhook fire (<code>payment.paid</code>) → WooCommerce order auto-complete</li>
+    <li>না মিললে → <strong>Reject</strong> → invoice <code>failed</code></li>
+  </ol>
+  <p class="caption" style="text-align:left;margin-top:14px">Note: Upay-এর আলাদা field <code>/admin → Settings</code>-এ নেই — Upay নিতে চাইলে <em>Bank account details</em> (free text) field-এ আপনার Upay নম্বর লিখে দিন, আর <em>Customer instructions</em>-এ "Upay-এ send money" mention করুন।</p>
+</section>
+
+<section class="wrap" id="quickstart">
+  <h2>Up and running in 5 steps</h2>
+  <p class="lead">Requirements: Node.js ≥ 22.5 (built-in <code>node:sqlite</code>). Node 24/26 recommended.</p>
+  <ol class="steps">
+    <li><code>git clone https://github.com/iamtanzir/FREE-Payment-Gateways.git &amp;&amp; cd FREE-Payment-Gateways</code></li>
+    <li><code>npm install</code></li>
+    <li><code>npm start</code> → open <code>http://localhost:3000</code> — the admin password is printed once in the console</li>
+    <li><code>/admin → API Keys → Create</code> → copy your key</li>
+    <li>Point your site at the REST API or drop the WordPress plugin in — full guide in <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/MERCHANT-SETUP.md">MERCHANT-SETUP.md</a></li>
+  </ol>
+</section>
+
+<section class="wrap" id="deploy">
+  <h2>Where can I deploy it?</h2>
+  <p class="lead">Anywhere Node.js runs. Cloudflare Workers is the one place it can't — use Cloudflare as a proxy/tunnel in front of your host instead (see <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/DEPLOYMENT.md">DEPLOYMENT.md §4F</a>).</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Option</th><th>Cost</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Render (Blueprint, <code>render.yaml</code>)</td><td>$0 free tier</td><td>One-click blueprint; free plan sleeps after ~15 min idle</td></tr>
+        <tr><td>Google Cloud Run / Vercel</td><td>$0 free tier</td><td>Serverless — needs free Postgres via <code>DATABASE_URL</code>; <code>*.run.app</code>/<code>*.vercel.app</code> URL with HTTPS</td></tr>
+        <tr><td>Koyeb</td><td>Paid (free tier ended)</td><td>Scale-to-zero ECO compute, billed per second — no longer $0</td></tr>
+        <tr><td>Docker / docker-compose</td><td>Your host</td><td><code>Dockerfile</code> included; works on any VPS, PC or Raspberry Pi / Orange Pi</td></tr>
+        <tr><td>Raspberry Pi / Orange Pi (ARM64)</td><td>$0 (hardware you already have)</td><td>Docker or direct Node 24; free HTTPS via DuckDNS + Caddy — see DEPLOY-ANYWHERE.md</td></tr>
+        <tr><td>Oracle Cloud Always Free / AWS EC2 free tier</td><td>$0 forever / $0 for 12 months</td><td>Best $0 24/7 alternative — see MIGRATE-FREE-HOST.md</td></tr>
+        <tr><td><strong>Full matrix (12 platforms) incl. Railway, Vercel, AWS</strong></td><td>per host</td><td><a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/DEPLOY-ANYWHERE.md">docs/DEPLOY-ANYWHERE.md</a></td></tr>
+        <tr><td>cPanel / Hostinger shared hosting</td><td>~hosting cost</td><td>Passenger/Node setup guide included</td></tr>
+        <tr><td>WordPress plugin (self-hosted gateway required)</td><td>Free plugin</td><td>Plugin talks to your gateway instance; it is not standalone</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="credit">⚡ FREE Payment Gateways · <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/LICENSE">AGPL-3.0 License</a> · <a href="https://github.com/iamtanzir/FREE-Payment-Gateways">Source</a> · <a href="https://github.com/iamtanzir/FREE-Payment-Gateways/blob/main/docs/DEPLOYMENT.md">Deployment guide</a> · Built with <span class="heart">❤️</span> using <a href="https://iamtanzir.github.io/" target="_blank" rel="noopener">Tanzir Ahmed</a></div>
+  </div>
+</footer>
+
+</body>
+</html>

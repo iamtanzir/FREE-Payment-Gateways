@@ -1,0 +1,11 @@
+project_id = "YOUR_PROJECT_REF"
+
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.piprapay-webhook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.validate-device-otp]
+    verify_jwt = false

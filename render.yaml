@@ -1,0 +1,42 @@
+# Render Blueprint — FREE MFS BD
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy (100% free): Render Dashboard → New → Blueprint → connect this repo → confirm.
+# Produces: web service "free-mfs-bd" on the FREE plan → https://free-mfs-bd.onrender.com
+# autoDeploy: true — every future git push to main redeploys the service automatically.
+#
+# FREE plan reality (honest notes):
+#   • Sleeps after ~15 min idle → first request cold-starts (~1 min). Keep-alive
+#     pings 24/7 burn the 750 free instance-hours/month → workspace suspended
+#     until next month (happened to free-mfs-bd). Removed — see docs/MIGRATE-FREE-HOST.md
+#     for $0 always-on alternatives (Oracle Always Free / Cloud Run).
+#   • Filesystem is ephemeral → SQLite data resets on redeploy/restart.
+#     For production data, set DATABASE_URL to a free Postgres (Neon), or
+#     switch `plan: starter` + uncomment the disk below (~$7/mo).
+services:
+  - type: web
+    name: free-mfs-bd
+    runtime: node
+    plan: free               # 100% free; change to "starter" for persistent disk
+    autoDeploy: true         # every push to main redeploys automatically
+    region: singapore        # closest to Bangladesh
+    buildCommand: npm install --omit=dev
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: BASE_URL        # https://free-mfs-bd.onrender.com (auto-generated) or your domain
+        sync: false
+      - key: ADMIN_PASSWORD  # long random string — Render will prompt you
+        sync: false
+      - key: TRUST_PROXY
+        value: "true"
+      - key: DATABASE_URL    # optional: free Postgres (Neon/Aiven/CockroachDB) — data survives redeploys
+        sync: false
+      - key: NODE_VERSION
+        value: "26"
+    # ── To make data persistent (paid, ~$7/mo): switch plan to "starter",
+    #    add DB_PATH=/app/data/fpg.db and:
+    # disk:
+    #   name: fpg-data
+    #   mountPath: /app/data
+    #   sizeGB: 1

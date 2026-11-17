@@ -1,0 +1,1 @@
+ALTER TABLE public.gateways ADD COLUMN brand_id uuid REFERENCES public.brands(id) ON DELETE SET NULL;

@@ -1,0 +1,1 @@
+CREATE POLICY "Public can view org name" ON public.organizations FOR SELECT TO anon USING (true);

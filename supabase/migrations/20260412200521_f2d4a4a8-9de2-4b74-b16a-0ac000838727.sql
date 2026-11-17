@@ -1,0 +1,1 @@
+UPDATE devices SET device_brand = NULL, device_model = NULL, device_version = NULL, device_api_level = NULL, last_seen_at = NULL, status = 'offline' WHERE id = 'f6418559-2c00-4f22-b6f6-8849ca06c475';
